@@ -1,0 +1,2365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hearth — Memory Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   CSS CUSTOM PROPERTIES
+═══════════════════════════════════════════════════════════ */
+:root {
+  --bg-void:    #08050302;
+  --bg-deep:    #0d0804;
+  --bg-surface: #17100a;
+  --bg-card:    #201509;
+  --bg-card-2:  #2a1c0e;
+  --bg-input:   #1a1009;
+
+  --amber:      #c4883a;
+  --gold:       #e8b86a;
+  --flame:      #f06830;
+  --cream:      #f0e6d6;
+  --cream-dim:  #b09070;
+  --muted:      #7a5c3a;
+
+  --border:     rgba(196, 136, 58, 0.18);
+  --border-hot: rgba(232, 184, 106, 0.55);
+  --glow-sm:    0 0 20px rgba(232, 184, 106, 0.12);
+  --glow-md:    0 0 40px rgba(232, 184, 106, 0.22);
+  --glow-lg:    0 0 80px rgba(240, 104, 48, 0.35);
+
+  --radius:     14px;
+  --radius-lg:  22px;
+  --ease:       cubic-bezier(0.16, 1, 0.3, 1);
+
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg-deep);
+  color: var(--cream);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, textarea, select { font-family: inherit; }
+a { color: inherit; text-decoration: none; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
+
+/* ═══════════════════════════════════════════════════════════
+   PARTICLE CANVAS
+═══════════════════════════════════════════════════════════ */
+#ember-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
+  transition: opacity 1s ease;
+}
+#ember-canvas.dim { opacity: 0.18; }
+
+/* ═══════════════════════════════════════════════════════════
+   GRAIN TEXTURE OVERLAY
+═══════════════════════════════════════════════════════════ */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+  opacity: 0.6;
+  mix-blend-mode: overlay;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   APP WRAPPER + SCREENS
+═══════════════════════════════════════════════════════════ */
+#app {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+}
+
+.screen {
+  display: none;
+  opacity: 0;
+  animation: screen-enter 0.6s var(--ease) forwards;
+}
+.screen.active {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+@keyframes screen-enter {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NAVBAR
+═══════════════════════════════════════════════════════════ */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 36px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(13, 8, 4, 0.7);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.nav-logo svg { width: 28px; height: 28px; }
+.nav-logo-text {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  text-shadow: 0 0 30px rgba(232, 184, 106, 0.4);
+}
+.nav-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cream-dim);
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  padding: 8px 14px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.nav-back:hover { color: var(--cream); background: rgba(255,255,255,0.05); }
+.nav-mode-badge {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.nav-mode-badge.live { border-color: rgba(100,180,100,0.4); color: #7bcf7b; }
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 1: LANDING
+═══════════════════════════════════════════════════════════ */
+#screen-landing {
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 60px 24px;
+  text-align: center;
+}
+.landing-logo {
+  margin-bottom: 32px;
+  animation: float 4s ease-in-out infinite;
+}
+.landing-logo svg {
+  width: 80px;
+  height: 80px;
+  filter: drop-shadow(0 0 30px rgba(240, 104, 48, 0.7));
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+.landing-title {
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 10vw, 7rem);
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  text-shadow: 0 0 60px rgba(232, 184, 106, 0.5), 0 0 120px rgba(240, 104, 48, 0.2);
+  animation: title-glow 3s ease-in-out infinite alternate;
+  margin-bottom: 16px;
+}
+@keyframes title-glow {
+  from { text-shadow: 0 0 40px rgba(232,184,106,0.4), 0 0 80px rgba(240,104,48,0.15); }
+  to   { text-shadow: 0 0 70px rgba(232,184,106,0.7), 0 0 130px rgba(240,104,48,0.35); }
+}
+.landing-sub {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  font-weight: 300;
+  font-style: italic;
+  color: var(--cream-dim);
+  letter-spacing: 0.06em;
+  margin-bottom: 60px;
+  animation: fade-in 1.2s var(--ease) 0.3s both;
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.role-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 700px;
+  width: 100%;
+  animation: fade-in 1s var(--ease) 0.6s both;
+}
+@media (max-width: 560px) { .role-cards { grid-template-columns: 1fr; } }
+
+.role-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 36px 28px;
+  cursor: pointer;
+  transition: all 0.4s var(--ease);
+  position: relative;
+  overflow: hidden;
+}
+.role-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(232,184,106,0.08) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.role-card:hover { border-color: var(--border-hot); transform: translateY(-4px); box-shadow: var(--glow-md); }
+.role-card:hover::before { opacity: 1; }
+.role-card-icon {
+  font-size: 2.4rem;
+  margin-bottom: 16px;
+  display: block;
+}
+.role-card h2 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 500;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.role-card p { font-size: 0.9rem; color: var(--cream-dim); line-height: 1.6; }
+
+.landing-demo-btn {
+  margin-top: 40px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  animation: fade-in 1s var(--ease) 1s both;
+}
+.landing-demo-btn:hover { color: var(--cream-dim); text-decoration-color: var(--muted); }
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 2: PATIENT LIST
+═══════════════════════════════════════════════════════════ */
+#screen-patients { padding: 0; }
+.patients-body { flex: 1; padding: 48px 36px; max-width: 1100px; margin: 0 auto; width: 100%; }
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 36px;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 400;
+  color: var(--cream);
+}
+.section-title span { color: var(--gold); }
+
+.patient-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.patient-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  cursor: pointer;
+  transition: all 0.35s var(--ease);
+  position: relative;
+  overflow: hidden;
+  animation: card-in 0.5s var(--ease) both;
+}
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.patient-card:hover {
+  border-color: var(--border-hot);
+  transform: translateY(-3px);
+  box-shadow: var(--glow-sm);
+}
+.patient-card-accent {
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--flame), var(--amber));
+  border-radius: 2px;
+  margin-bottom: 20px;
+}
+.patient-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+.patient-card .age-stage {
+  font-size: 0.8rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  margin-bottom: 18px;
+}
+.patient-card-stats {
+  display: flex;
+  gap: 16px;
+}
+.patient-stat {
+  text-align: center;
+}
+.patient-stat .n {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--gold);
+  display: block;
+}
+.patient-stat .l {
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.patient-card-badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.badge-moderate { background: rgba(196,136,58,0.15); color: var(--amber); border: 1px solid rgba(196,136,58,0.25); }
+.badge-mild     { background: rgba(100,180,100,0.12); color: #8bcf8b; border: 1px solid rgba(100,180,100,0.25); }
+.badge-severe   { background: rgba(200,80,80,0.12);  color: #cf8b8b; border: 1px solid rgba(200,80,80,0.25); }
+
+.add-patient-card {
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  cursor: pointer;
+  transition: all 0.35s var(--ease);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+}
+.add-patient-card:hover {
+  border-color: rgba(196,136,58,0.4);
+  color: var(--cream-dim);
+  background: rgba(196,136,58,0.04);
+}
+.add-icon {
+  width: 40px;
+  height: 40px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  transition: transform 0.2s ease;
+}
+.add-patient-card:hover .add-icon { transform: rotate(90deg); }
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 3: PATIENT DETAIL
+═══════════════════════════════════════════════════════════ */
+#screen-patient { padding: 0; }
+.patient-body { flex: 1; padding: 40px 36px; max-width: 1000px; margin: 0 auto; width: 100%; }
+
+.patient-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+.patient-header-info h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  font-weight: 400;
+  color: var(--cream);
+  margin-bottom: 8px;
+}
+.patient-header-info .meta {
+  font-size: 0.875rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.dot { color: var(--border-hot); }
+
+.patient-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+@media (max-width: 700px) { .patient-detail-grid { grid-template-columns: 1fr; } }
+
+.info-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.info-card h4 {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.info-card .value {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--cream);
+  line-height: 1.5;
+}
+.tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.tag {
+  font-size: 0.78rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  color: var(--cream-dim);
+}
+.tag.avoid { border-color: rgba(200,80,80,0.3); color: #c88b8b; background: rgba(200,80,80,0.07); }
+.tag.calm  { border-color: rgba(100,180,100,0.3); color: #8bcf8b; background: rgba(100,180,100,0.07); }
+
+.photo-strip {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.photo-thumb {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+.photo-thumb:hover { opacity: 1; }
+.photo-placeholder {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.6rem;
+  text-align: center;
+}
+
+/* ── LUCID MOMENT BUTTON ──────────────────────────────────── */
+.lucid-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 0;
+}
+.lucid-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 28px;
+}
+.lucid-btn-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lucid-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(240, 104, 48, 0.25);
+  animation: ring-pulse 2.5s ease-in-out infinite;
+}
+.lucid-ring:nth-child(1) { width: 200px; height: 200px; animation-delay: 0s; }
+.lucid-ring:nth-child(2) { width: 250px; height: 250px; animation-delay: 0.5s; }
+.lucid-ring:nth-child(3) { width: 300px; height: 300px; animation-delay: 1s; }
+@keyframes ring-pulse {
+  0%, 100% { transform: scale(0.95); opacity: 0.5; }
+  50%       { transform: scale(1.05); opacity: 0.2; }
+}
+.lucid-btn {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2a1508 0%, #1a0c05 60%);
+  border: 2px solid rgba(240, 104, 48, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  transition: all 0.4s var(--ease);
+  box-shadow: 0 0 40px rgba(240,104,48,0.25), inset 0 0 30px rgba(240,104,48,0.08);
+  animation: btn-breathe 3s ease-in-out infinite;
+}
+@keyframes btn-breathe {
+  0%, 100% { box-shadow: 0 0 40px rgba(240,104,48,0.25), inset 0 0 30px rgba(240,104,48,0.08); }
+  50%       { box-shadow: 0 0 70px rgba(240,104,48,0.5),  inset 0 0 40px rgba(240,104,48,0.15); }
+}
+.lucid-btn:hover {
+  transform: scale(1.06);
+  border-color: rgba(240,104,48,0.9);
+  box-shadow: 0 0 90px rgba(240,104,48,0.6), inset 0 0 40px rgba(240,104,48,0.2);
+}
+.lucid-btn:active { transform: scale(0.97); }
+.lucid-btn-word {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+.lucid-btn-word.big {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--gold);
+  letter-spacing: 0.06em;
+}
+
+/* ── ARTIFACT HISTORY ─────────────────────────────────────── */
+.history-section { margin-top: 40px; }
+.history-section h3 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--cream-dim);
+  margin-bottom: 16px;
+}
+.run-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.run-row:hover { border-color: var(--border-hot); }
+.run-row .ts { font-size: 0.82rem; color: var(--muted); font-family: monospace; }
+.run-row .fc { font-size: 0.82rem; color: var(--cream-dim); }
+.run-view-btn {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--amber);
+  padding: 5px 12px;
+  border: 1px solid rgba(196,136,58,0.3);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+.run-row:hover .run-view-btn { background: rgba(196,136,58,0.1); }
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 4: LUCID NOW (GENERATION)
+═══════════════════════════════════════════════════════════ */
+#screen-lucid {
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+.lucid-patient-name {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 300;
+  font-style: italic;
+  color: var(--cream-dim);
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+}
+.lucid-status-text {
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 48px;
+}
+
+.artifact-quad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto 48px;
+}
+@media (max-width: 500px) { .artifact-quad { grid-template-columns: 1fr; } }
+
+.artifact-tile {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 30px 20px;
+  transition: all 0.6s var(--ease);
+  position: relative;
+  overflow: hidden;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.artifact-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 30%, rgba(232,184,106,0.08), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.artifact-tile.generating {
+  border-color: rgba(196,136,58,0.6);
+  animation: tile-pulse 1.5s ease-in-out infinite;
+}
+.artifact-tile.generating::before { opacity: 1; }
+@keyframes tile-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(196,136,58,0.15); }
+  50%       { box-shadow: 0 0 45px rgba(196,136,58,0.35); }
+}
+.artifact-tile.done {
+  border-color: var(--gold);
+  box-shadow: 0 0 30px rgba(232,184,106,0.2);
+  animation: tile-bloom 0.7s var(--ease) both;
+}
+.artifact-tile.done::before { opacity: 1; background: radial-gradient(circle at 50% 30%, rgba(232,184,106,0.12), transparent 70%); }
+@keyframes tile-bloom {
+  0%   { transform: scale(0.97); }
+  60%  { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+.artifact-tile.skipped { opacity: 0.4; }
+.artifact-tile.error   { border-color: rgba(200,80,80,0.4); }
+
+.tile-icon { font-size: 2rem; filter: saturate(0.6); transition: filter 0.4s ease; }
+.artifact-tile.done .tile-icon  { filter: saturate(1.2); }
+.artifact-tile.generating .tile-icon { animation: icon-spin 1.8s ease-in-out infinite; }
+@keyframes icon-spin {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50%       { transform: scale(1.15) rotate(5deg); }
+}
+
+.tile-name {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cream-dim);
+}
+.tile-status {
+  font-size: 0.72rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tile-status.done  { color: var(--gold); }
+.tile-status.gen   { color: var(--amber); }
+.tile-status.error { color: #cf8b8b; }
+
+/* Spinner */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(196,136,58,0.2);
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Check mark */
+.check {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+}
+.check svg { width: 100%; height: 100%; }
+
+.lucid-complete-btn {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s var(--ease);
+  pointer-events: none;
+  background: linear-gradient(135deg, var(--flame), var(--amber));
+  color: #0d0804;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 16px 48px;
+  border-radius: 50px;
+  box-shadow: 0 8px 40px rgba(240,104,48,0.4);
+  cursor: pointer;
+  border: none;
+}
+.lucid-complete-btn.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  animation: btn-glow 2s ease-in-out infinite alternate;
+}
+@keyframes btn-glow {
+  from { box-shadow: 0 8px 40px rgba(240,104,48,0.4); }
+  to   { box-shadow: 0 8px 60px rgba(240,104,48,0.7); }
+}
+
+.mode-note {
+  margin-top: 16px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  opacity: 0;
+  transition: opacity 0.5s ease 0.5s;
+}
+.mode-note.visible { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 5: ARTIFACT GALLERY
+═══════════════════════════════════════════════════════════ */
+#screen-artifacts { padding: 0; }
+.artifacts-body { flex: 1; padding: 40px 36px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+.artifact-gallery-title {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 300;
+  color: var(--cream);
+  margin-bottom: 8px;
+}
+.artifact-gallery-sub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 36px;
+}
+
+.artifact-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+  gap: 24px;
+}
+@media (max-width: 520px) { .artifact-gallery-grid { grid-template-columns: 1fr; } }
+
+.artifact-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.35s var(--ease);
+  animation: card-in 0.5s var(--ease) both;
+}
+.artifact-card:hover { border-color: var(--border-hot); box-shadow: var(--glow-sm); }
+
+.artifact-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.artifact-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--cream);
+}
+.artifact-card-title span { font-size: 1.4rem; }
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--amber);
+  padding: 7px 14px;
+  border: 1px solid rgba(196,136,58,0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+.download-btn:hover { background: rgba(196,136,58,0.1); border-color: var(--border-hot); }
+
+.pdf-frame {
+  width: 100%;
+  height: 420px;
+  border: none;
+  background: var(--bg-surface);
+  display: block;
+}
+
+.voice-display {
+  padding: 28px 22px;
+}
+.voice-script-text {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--cream-dim);
+  line-height: 1.75;
+  padding: 20px;
+  background: var(--bg-surface);
+  border-radius: 10px;
+  border-left: 3px solid var(--amber);
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+.voice-instructions {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+audio {
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 8px;
+  accent-color: var(--amber);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 6: ONBOARDING
+═══════════════════════════════════════════════════════════ */
+#screen-onboarding { padding: 0; }
+.onboarding-body {
+  flex: 1;
+  padding: 40px 24px;
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Progress */
+.progress-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 48px;
+}
+.progress-track {
+  flex: 1;
+  height: 3px;
+  background: var(--bg-card-2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--flame), var(--amber));
+  border-radius: 2px;
+  transition: width 0.5s var(--ease);
+}
+.progress-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.1em; white-space: nowrap; }
+
+/* Step panels */
+.step-panel {
+  display: none;
+  animation: screen-enter 0.4s var(--ease) both;
+}
+.step-panel.active { display: block; }
+.step-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+.step-sub {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+/* Form elements */
+.form-group { margin-bottom: 20px; }
+.form-label {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.form-input, .form-textarea, .form-select {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: var(--cream);
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease;
+  outline: none;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--amber); }
+.form-textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+.form-select { appearance: none; cursor: pointer; }
+.form-hint { font-size: 0.75rem; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+
+/* Tone selector */
+.tone-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.tone-btn {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--cream-dim);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tone-btn:hover { border-color: var(--border-hot); }
+.tone-btn.active { background: rgba(196,136,58,0.15); border-color: var(--amber); color: var(--gold); }
+
+/* Memory counter */
+.memory-counter {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.memory-counter-label { font-size: 0.8rem; color: var(--muted); letter-spacing: 0.08em; }
+.memory-list { margin-top: 20px; }
+.memory-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  animation: card-in 0.3s var(--ease) both;
+}
+.memory-item .mi-num {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  color: var(--amber);
+  width: 24px;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+.memory-item .mi-text { font-size: 0.85rem; color: var(--cream-dim); line-height: 1.5; }
+
+/* Dropzone */
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.dropzone:hover, .dropzone.drag-over {
+  border-color: rgba(196,136,58,0.5);
+  background: rgba(196,136,58,0.03);
+}
+.dropzone-icon { font-size: 2.4rem; margin-bottom: 12px; display: block; }
+.dropzone-label { font-size: 0.9rem; color: var(--cream-dim); margin-bottom: 6px; }
+.dropzone-hint  { font-size: 0.78rem; color: var(--muted); }
+.file-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.file-chip {
+  font-size: 0.78rem;
+  padding: 5px 12px;
+  background: rgba(196,136,58,0.1);
+  border: 1px solid rgba(196,136,58,0.25);
+  border-radius: 6px;
+  color: var(--amber);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Success */
+.success-icon { font-size: 4rem; margin-bottom: 20px; display: block; animation: float 3s ease-in-out infinite; }
+.success-title {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  color: var(--gold);
+  margin-bottom: 12px;
+}
+.success-message { font-size: 1rem; color: var(--cream-dim); line-height: 1.7; margin-bottom: 32px; }
+
+/* Nav buttons */
+.step-nav { display: flex; gap: 12px; margin-top: 32px; align-items: center; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--flame), var(--amber));
+  color: #0d0804;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.06em;
+  padding: 13px 32px;
+  border-radius: 50px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 20px rgba(240,104,48,0.3);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(240,104,48,0.45); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  background: transparent;
+  color: var(--cream-dim);
+  font-size: 0.875rem;
+  padding: 13px 24px;
+  border-radius: 50px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover { border-color: var(--border-hot); color: var(--cream); }
+.btn-skip {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: auto;
+}
+.btn-skip:hover { color: var(--cream-dim); text-decoration-color: var(--muted); }
+
+/* ═══════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+═══════════════════════════════════════════════════════════ */
+#toast-wrap {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--bg-card-2);
+  border: 1px solid var(--border-hot);
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 0.85rem;
+  color: var(--cream);
+  max-width: 320px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  animation: toast-in 0.4s var(--ease) both;
+  pointer-events: auto;
+}
+.toast.error { border-color: rgba(200,80,80,0.5); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 5, 3, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-overlay.open { display: flex; animation: fade-in 0.25s ease both; }
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border-hot);
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+}
+.modal h2 {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  color: var(--cream);
+  margin-bottom: 10px;
+}
+.modal p { font-size: 0.9rem; color: var(--cream-dim); line-height: 1.6; margin-bottom: 24px; }
+.modal-btns { display: flex; gap: 12px; }
+
+/* ═══════════════════════════════════════════════════════════
+   LOADER OVERLAY
+═══════════════════════════════════════════════════════════ */
+#page-loader {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-deep);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  transition: opacity 0.5s ease;
+}
+#page-loader.hidden { opacity: 0; pointer-events: none; }
+.loader-flame { font-size: 3rem; animation: float 2s ease-in-out infinite; }
+.loader-text { font-family: var(--font-display); font-size: 1rem; color: var(--muted); letter-spacing: 0.1em; }
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════════ */
+.hidden  { display: none !important; }
+.mt-8    { margin-top: 8px; }
+.mt-16   { margin-top: 16px; }
+.mt-24   { margin-top: 24px; }
+.flex    { display: flex; }
+.items-center { align-items: center; }
+.gap-8   { gap: 8px; }
+.text-muted  { color: var(--muted); }
+.text-cream  { color: var(--cream); }
+.text-gold   { color: var(--gold); }
+.italic      { font-style: italic; }
+.serif       { font-family: var(--font-display); }
+</style>
+</head>
+
+<body>
+
+<!-- Ember particle canvas -->
+<canvas id="ember-canvas"></canvas>
+
+<!-- Page loader -->
+<div id="page-loader">
+  <div class="loader-flame">🔥</div>
+  <div class="loader-text">Hearth is warming up...</div>
+</div>
+
+<!-- Toast notifications -->
+<div id="toast-wrap"></div>
+
+<!-- Confirm modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2 id="modal-title">Are you sure?</h2>
+    <p id="modal-body">This action cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="btn-primary" id="modal-confirm">Confirm</button>
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ─── SCREEN: LANDING ────────────────────────────────── -->
+  <section id="screen-landing" class="screen active">
+    <div class="landing-logo">
+      <svg viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="fg" cx="50%" cy="80%" r="60%">
+            <stop offset="0%"   stop-color="#f06830"/>
+            <stop offset="50%"  stop-color="#e8882a"/>
+            <stop offset="100%" stop-color="#c45018" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="ig" cx="50%" cy="70%" r="40%">
+            <stop offset="0%"  stop-color="#ffe0a0"/>
+            <stop offset="100%" stop-color="#f09040" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="url(#fg)" opacity="0.9"/>
+        <path d="M50 90 C35 72 28 55 33 38 C38 22 48 18 50 28 C52 18 62 22 67 38 C72 55 65 72 50 90Z" fill="url(#ig)" opacity="0.8"/>
+        <ellipse cx="50" cy="108" rx="20" ry="4" fill="#f06830" opacity="0.3"/>
+      </svg>
+    </div>
+    <h1 class="landing-title">Hearth</h1>
+    <p class="landing-sub">When a lucid moment happens, be ready.</p>
+    <div class="role-cards">
+      <div class="role-card" onclick="selectRole('caregiver')">
+        <span class="role-card-icon">🏥</span>
+        <h2>I'm a Caregiver</h2>
+        <p>Trigger a personalized memory package when a lucid moment happens.</p>
+      </div>
+      <div class="role-card" onclick="selectRole('family')">
+        <span class="role-card-icon">👨‍👩‍👧</span>
+        <h2>I'm a Family Member</h2>
+        <p>Share memories, photos, and your voice so we're ready when it matters.</p>
+      </div>
+    </div>
+    <button class="landing-demo-btn" onclick="setupDemo()">
+      Set up demo patient (Margaret Chen)
+    </button>
+  </section>
+
+  <!-- ─── SCREEN: PATIENTS ───────────────────────────────── -->
+  <section id="screen-patients" class="screen">
+    <nav class="nav">
+      <div class="nav-logo" onclick="showScreen('landing')">
+        <svg width="22" height="26" viewBox="0 0 100 120" fill="none">
+          <path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#e8b86a"/>
+        </svg>
+        <span class="nav-logo-text">Hearth</span>
+      </div>
+      <span class="nav-mode-badge" id="patients-mode-badge">Loading...</span>
+    </nav>
+    <div class="patients-body">
+      <div class="section-header">
+        <h2 class="section-title">Your <span>Patients</span></h2>
+      </div>
+      <div class="patient-grid" id="patient-grid">
+        <div class="add-patient-card" onclick="showOnboarding(null)">
+          <div class="add-icon">+</div>
+          <span>New Patient</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── SCREEN: PATIENT DETAIL ────────────────────────── -->
+  <section id="screen-patient" class="screen">
+    <nav class="nav">
+      <div class="nav-back" onclick="showScreen('patients')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        All Patients
+      </div>
+      <div class="nav-logo" onclick="showScreen('landing')">
+        <svg width="22" height="26" viewBox="0 0 100 120" fill="none"><path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#e8b86a"/></svg>
+        <span class="nav-logo-text">Hearth</span>
+      </div>
+      <button class="btn-secondary" onclick="showOnboarding(state.currentPatientId)" style="font-size:0.8rem;padding:8px 16px">+ Add Memories</button>
+    </nav>
+    <div class="patient-body" id="patient-body">
+      <!-- filled by JS -->
+    </div>
+  </section>
+
+  <!-- ─── SCREEN: LUCID NOW ─────────────────────────────── -->
+  <section id="screen-lucid" class="screen">
+    <p class="lucid-patient-name" id="lucid-patient-name">Generating...</p>
+    <p class="lucid-status-text" id="lucid-status-text">Preparing your package</p>
+
+    <div class="artifact-quad" id="artifact-quad">
+      <div class="artifact-tile" id="tile-letter">
+        <span class="tile-icon">✉️</span>
+        <span class="tile-name">Letter</span>
+        <span class="tile-status" id="status-letter">Waiting...</span>
+      </div>
+      <div class="artifact-tile" id="tile-voice">
+        <span class="tile-icon">🎙️</span>
+        <span class="tile-name">Voice Message</span>
+        <span class="tile-status" id="status-voice">Waiting...</span>
+      </div>
+      <div class="artifact-tile" id="tile-photo_story">
+        <span class="tile-icon">🖼️</span>
+        <span class="tile-name">Photo Story</span>
+        <span class="tile-status" id="status-photo_story">Waiting...</span>
+      </div>
+      <div class="artifact-tile" id="tile-dialogue_guide">
+        <span class="tile-icon">💬</span>
+        <span class="tile-name">Dialogue Guide</span>
+        <span class="tile-status" id="status-dialogue_guide">Waiting...</span>
+      </div>
+    </div>
+
+    <button class="lucid-complete-btn" id="lucid-complete-btn"
+            onclick="showArtifacts()">
+      View Artifacts &rarr;
+    </button>
+    <p class="mode-note" id="mode-note"></p>
+  </section>
+
+  <!-- ─── SCREEN: ARTIFACTS ─────────────────────────────── -->
+  <section id="screen-artifacts" class="screen">
+    <nav class="nav">
+      <div class="nav-back" id="artifacts-back" onclick="showScreen('patient')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        Back
+      </div>
+      <div class="nav-logo" onclick="showScreen('landing')">
+        <svg width="22" height="26" viewBox="0 0 100 120" fill="none"><path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#e8b86a"/></svg>
+        <span class="nav-logo-text">Hearth</span>
+      </div>
+      <span style="width:80px"></span>
+    </nav>
+    <div class="artifacts-body" id="artifacts-body">
+      <!-- filled by JS -->
+    </div>
+  </section>
+
+  <!-- ─── SCREEN: ONBOARDING ────────────────────────────── -->
+  <section id="screen-onboarding" class="screen">
+    <nav class="nav">
+      <div class="nav-back" onclick="exitOnboarding()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        Back
+      </div>
+      <div class="nav-logo">
+        <svg width="22" height="26" viewBox="0 0 100 120" fill="none"><path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#e8b86a"/></svg>
+        <span class="nav-logo-text">Hearth</span>
+      </div>
+      <span style="width:80px"></span>
+    </nav>
+    <div class="onboarding-body">
+      <div class="progress-bar-wrap">
+        <div class="progress-track">
+          <div class="progress-fill" id="ob-progress-fill" style="width:0%"></div>
+        </div>
+        <span class="progress-label" id="ob-progress-label">Step 1</span>
+      </div>
+
+      <!-- Step 1: Who are you? -->
+      <div class="step-panel active" id="step-1">
+        <h2 class="step-title">About you</h2>
+        <p class="step-sub">Tell us who you are so we can personalize everything.</p>
+        <div class="form-group">
+          <label class="form-label">Your full name</label>
+          <input class="form-input" id="ob-submitter" type="text" placeholder="e.g. David Chen">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your relationship to the patient</label>
+          <input class="form-input" id="ob-relationship" type="text" placeholder="e.g. son, daughter, spouse">
+        </div>
+        <div class="step-nav">
+          <button class="btn-primary" onclick="obNext()">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Patient (new or existing) -->
+      <div class="step-panel" id="step-2">
+        <h2 class="step-title">About your loved one</h2>
+        <p class="step-sub">Is your loved one already set up in Hearth?</p>
+        <div style="display:flex;gap:12px;margin-bottom:24px">
+          <div class="role-card" style="flex:1;padding:22px" onclick="obSelectPatient('existing')">
+            <span class="role-card-icon" style="font-size:1.6rem">✅</span>
+            <h2 style="font-size:1.2rem">Yes, already set up</h2>
+          </div>
+          <div class="role-card" style="flex:1;padding:22px" onclick="obSelectPatient('new')">
+            <span class="role-card-icon" style="font-size:1.6rem">➕</span>
+            <h2 style="font-size:1.2rem">New patient</h2>
+          </div>
+        </div>
+        <!-- Existing patient selector -->
+        <div id="ob-existing-picker" class="hidden">
+          <div class="form-group">
+            <label class="form-label">Select patient</label>
+            <select class="form-select" id="ob-patient-select">
+              <option value="">Loading...</option>
+            </select>
+          </div>
+          <div class="step-nav">
+            <button class="btn-secondary" onclick="obPrev()">← Back</button>
+            <button class="btn-primary" onclick="obPickExisting()">Continue →</button>
+          </div>
+        </div>
+        <!-- New patient form -->
+        <div id="ob-new-form" class="hidden">
+          <div class="form-group">
+            <label class="form-label">Patient's full name</label>
+            <input class="form-input" id="ob-patient-name" type="text" placeholder="e.g. Margaret Chen">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group">
+              <label class="form-label">Age</label>
+              <input class="form-input" id="ob-age" type="number" placeholder="e.g. 79" min="1" max="120">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Stage</label>
+              <select class="form-select" id="ob-stage">
+                <option value="mild">Mild</option>
+                <option value="moderate" selected>Moderate</option>
+                <option value="severe">Severe</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emotional anchors <span class="form-hint" style="display:inline">(comma-separated)</span></label>
+            <input class="form-input" id="ob-anchors" placeholder="e.g. Sunday cooking, Galveston pier, late husband George">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Calming topics</label>
+            <input class="form-input" id="ob-calming" placeholder="e.g. garden, her dog Biscuit, Frank Sinatra">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Topics to avoid</label>
+            <input class="form-input" id="ob-avoid" placeholder="e.g. her sister's passing, the accident">
+          </div>
+          <div class="step-nav">
+            <button class="btn-secondary" onclick="obPrev()">← Back</button>
+            <button class="btn-primary" onclick="obCreatePatient()">Continue →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Add memories -->
+      <div class="step-panel" id="step-3">
+        <h2 class="step-title">Share a memory</h2>
+        <p class="step-sub">Write it like you're telling a friend — specific details, real names, real places. The more concrete, the more powerful.</p>
+        <div class="form-group">
+          <textarea class="form-textarea" id="ob-memory-text" placeholder="Mom used to make brisket every Sunday. She said it was Grandma Rose's recipe, though she'd tweaked it over forty years..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emotional tone</label>
+          <div class="tone-btns">
+            <button class="tone-btn active" onclick="setTone(this,'warm')">Warm</button>
+            <button class="tone-btn" onclick="setTone(this,'joyful')">Joyful</button>
+            <button class="tone-btn" onclick="setTone(this,'nostalgic')">Nostalgic</button>
+            <button class="tone-btn" onclick="setTone(this,'bittersweet')">Bittersweet</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px">
+          <div>
+            <div class="memory-counter" id="ob-memory-count">0</div>
+            <div class="memory-counter-label">/ 10 memories</div>
+          </div>
+          <div class="memory-list" id="ob-memory-list" style="flex:1"></div>
+        </div>
+        <div class="step-nav">
+          <button class="btn-secondary" onclick="obPrev()">← Back</button>
+          <button class="btn-primary" id="ob-add-memory-btn" onclick="obAddMemory()">+ Add Memory</button>
+          <button class="btn-skip" onclick="obNext()" id="ob-memories-done-btn">Done adding →</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Upload photos -->
+      <div class="step-panel" id="step-4">
+        <h2 class="step-title">Family photos</h2>
+        <p class="step-sub">Upload photos associated with your memories. These will appear in the photo story with captions the caregiver reads aloud.</p>
+        <div class="dropzone" id="photo-dropzone" onclick="document.getElementById('photo-input').click()">
+          <span class="dropzone-icon">🖼️</span>
+          <p class="dropzone-label">Drop photos here or click to browse</p>
+          <p class="dropzone-hint">JPG, PNG, WEBP — up to 20MB each</p>
+          <div class="file-chips" id="photo-chips"></div>
+        </div>
+        <input type="file" id="photo-input" class="hidden" accept="image/*" multiple onchange="handlePhotoSelect(this.files)">
+        <div class="step-nav">
+          <button class="btn-secondary" onclick="obPrev()">← Back</button>
+          <button class="btn-primary" onclick="obUploadPhotos()">Continue →</button>
+          <button class="btn-skip" onclick="obNext()">Skip →</button>
+        </div>
+      </div>
+
+      <!-- Step 5: Voice sample -->
+      <div class="step-panel" id="step-5">
+        <h2 class="step-title">Your voice</h2>
+        <p class="step-sub">A 30–60 second recording of you speaking is enough for ElevenLabs to synthesize a voice message in your voice. This is optional but deeply personal.</p>
+        <div class="dropzone" id="voice-dropzone" onclick="document.getElementById('voice-input').click()">
+          <span class="dropzone-icon">🎙️</span>
+          <p class="dropzone-label">Drop a voice recording here or click to browse</p>
+          <p class="dropzone-hint">MP3, WAV, M4A — any length, 30+ seconds recommended</p>
+          <div class="file-chips" id="voice-chips"></div>
+        </div>
+        <input type="file" id="voice-input" class="hidden" accept="audio/*" onchange="handleVoiceSelect(this.files)">
+        <div class="step-nav">
+          <button class="btn-secondary" onclick="obPrev()">← Back</button>
+          <button class="btn-primary" onclick="obUploadVoice()">Continue →</button>
+          <button class="btn-skip" onclick="obNext()">Skip →</button>
+        </div>
+      </div>
+
+      <!-- Step 6: Done -->
+      <div class="step-panel" id="step-6">
+        <span class="success-icon">🔥</span>
+        <h2 class="step-title success-title">You're ready.</h2>
+        <p class="success-message" id="ob-success-msg">
+          The memories are saved. When a lucid moment happens, the caregiver will trigger Hearth and everything you've shared will be there — warm, specific, and waiting.
+        </p>
+        <div class="step-nav">
+          <button class="btn-primary" onclick="exitOnboarding()">Back to Patients</button>
+        </div>
+      </div>
+
+    </div><!-- /onboarding-body -->
+  </section>
+
+</div><!-- /app -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════ */
+const state = {
+  role: null,              // 'caregiver' | 'family'
+  currentPatientId: null,
+  currentPatient: null,
+  currentJob: null,
+  currentJobTimestamp: null,
+  currentArtifactTimestamp: null,
+  obPatientId: null,
+  obSubmitter: '',
+  obRelationship: '',
+  obMemories: [],
+  obTone: 'warm',
+  obPhotos: [],
+  obVoice: null,
+  obStep: 1,
+  obTotalSteps: 6,
+};
+
+/* ═══════════════════════════════════════════════════════════
+   EMBER PARTICLE SYSTEM
+═══════════════════════════════════════════════════════════ */
+(function initParticles() {
+  const canvas = document.getElementById('ember-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let W, H;
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  class Ember {
+    constructor() { this.reset(true); }
+    reset(initial = false) {
+      this.x = Math.random() * W;
+      this.y = initial ? Math.random() * H : H + 10;
+      this.vx = (Math.random() - 0.5) * 0.6;
+      this.vy = -(Math.random() * 1.2 + 0.4);
+      this.size = Math.random() * 2.5 + 0.5;
+      this.life = 1.0;
+      this.decay = Math.random() * 0.004 + 0.0025;
+      const h = Math.random() * 45 + 15;     // hue 15–60 (amber/orange)
+      const s = 75 + Math.random() * 25;
+      const l = 55 + Math.random() * 25;
+      this.color = `hsl(${h},${s}%,${l}%)`;
+    }
+    update() {
+      this.x += this.vx + Math.sin(this.y * 0.02) * 0.3;
+      this.y += this.vy;
+      this.life -= this.decay;
+      if (this.life <= 0 || this.y < -10) this.reset();
+    }
+    draw() {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, this.life * 0.85);
+      ctx.fillStyle = this.color;
+      ctx.shadowColor = this.color;
+      ctx.shadowBlur = this.size * 3;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  for (let i = 0; i < 120; i++) particles.push(new Ember());
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN NAVIGATION
+═══════════════════════════════════════════════════════════ */
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+
+  const screen = document.getElementById(`screen-${name}`);
+  if (!screen) return;
+  screen.style.display = 'flex';
+  // Trigger reflow for animation
+  screen.offsetHeight;
+  screen.classList.add('active');
+
+  // Dim particles on non-landing screens
+  const canvas = document.getElementById('ember-canvas');
+  canvas.classList.toggle('dim', name !== 'landing');
+
+  window.scrollTo(0, 0);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════ */
+function toast(msg, isError = false) {
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = 'toast' + (isError ? ' error' : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════════════════ */
+let modalResolve = null;
+function openModal(title, body) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent = body;
+  document.getElementById('modal-overlay').classList.add('open');
+  return new Promise(res => { modalResolve = res; });
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  if (modalResolve) { modalResolve(false); modalResolve = null; }
+}
+document.getElementById('modal-confirm').onclick = () => {
+  document.getElementById('modal-overlay').classList.remove('open');
+  if (modalResolve) { modalResolve(true); modalResolve = null; }
+};
+
+/* ═══════════════════════════════════════════════════════════
+   API HELPERS
+═══════════════════════════════════════════════════════════ */
+async function api(path, method = 'GET', body = null) {
+  const opts = { method, headers: {} };
+  if (body) {
+    opts.body = JSON.stringify(body);
+    opts.headers['Content-Type'] = 'application/json';
+  }
+  const r = await fetch('/api' + path, opts);
+  if (!r.ok) {
+    const t = await r.text();
+    throw new Error(t || `HTTP ${r.status}`);
+  }
+  return r.json();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LANDING
+═══════════════════════════════════════════════════════════ */
+async function selectRole(role) {
+  state.role = role;
+  if (role === 'caregiver') {
+    await loadPatients();
+    showScreen('patients');
+  } else {
+    showOnboarding(null);
+  }
+}
+
+async function setupDemo() {
+  toast('Setting up Margaret Chen...');
+  try {
+    const r = await api('/demo/setup', 'POST');
+    toast('Margaret Chen is ready. Loading patients...');
+    await loadPatients();
+    state.role = 'caregiver';
+    showScreen('patients');
+  } catch (e) {
+    toast('Demo setup failed: ' + e.message, true);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PATIENT LIST
+═══════════════════════════════════════════════════════════ */
+async function loadPatients() {
+  // Check API mode
+  try {
+    const s = await api('/status');
+    const badge = document.getElementById('patients-mode-badge');
+    if (s.claude_available) {
+      badge.textContent = '● Live Claude API';
+      badge.classList.add('live');
+    } else {
+      badge.textContent = 'Demo Mode';
+    }
+  } catch {}
+
+  const patients = await api('/patients');
+  const grid = document.getElementById('patient-grid');
+
+  // Keep the add-card first
+  const addCard = grid.querySelector('.add-patient-card');
+  grid.innerHTML = '';
+  grid.appendChild(addCard);
+
+  patients.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'patient-card';
+    card.style.animationDelay = `${i * 0.07}s`;
+    const stage = p.profile.stage || 'moderate';
+    card.innerHTML = `
+      <div class="patient-card-accent"></div>
+      <span class="patient-card-badge badge-${stage}">${stage}</span>
+      <h3>${p.profile.name || p.id}</h3>
+      <div class="age-stage">Age ${p.profile.age || '—'} &nbsp;·&nbsp; ${p.profile.primary_family_contact || 'No family contact yet'}</div>
+      <div class="patient-card-stats">
+        <div class="patient-stat"><span class="n">${p.memory_count}</span><span class="l">Memories</span></div>
+        <div class="patient-stat"><span class="n">${p.photo_count}</span><span class="l">Photos</span></div>
+        ${p.recent_run ? `<div class="patient-stat"><span class="n" style="font-size:1rem">✓</span><span class="l">Has Runs</span></div>` : ''}
+      </div>
+    `;
+    card.onclick = () => loadPatientDetail(p.id);
+    grid.appendChild(card);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PATIENT DETAIL
+═══════════════════════════════════════════════════════════ */
+async function loadPatientDetail(patientId) {
+  state.currentPatientId = patientId;
+  showScreen('patient');
+
+  const body = document.getElementById('patient-body');
+  body.innerHTML = `<div style="text-align:center;padding:60px;color:var(--muted)">Loading...</div>`;
+
+  try {
+    const data = await api(`/patients/${patientId}`);
+    state.currentPatient = data;
+    renderPatientDetail(data);
+  } catch (e) {
+    body.innerHTML = `<div style="color:#cf8b8b;padding:40px">${e.message}</div>`;
+  }
+}
+
+function renderPatientDetail(data) {
+  const { profile, memories, photos, artifact_runs } = data;
+  const body = document.getElementById('patient-body');
+
+  const anchors = (profile.emotional_anchors || []).map(t => `<span class="tag">${t}</span>`).join('');
+  const calming  = (profile.calming_topics   || []).map(t => `<span class="tag calm">${t}</span>`).join('');
+  const avoid    = (profile.avoid_topics     || []).map(t => `<span class="tag avoid">${t}</span>`).join('');
+
+  const photoThumbs = photos.slice(0, 8).map(fn =>
+    `<img class="photo-thumb" src="/api/photos/${data.id}/${fn}" alt="${fn}" onerror="this.outerHTML='<div class=photo-placeholder>?</div>'">`
+  ).join('');
+
+  const recentMemory = memories.length > 0
+    ? `"${memories[memories.length - 1].memory_text.slice(0, 100)}..."`
+    : 'No memories yet.';
+
+  const runRows = (artifact_runs || []).map(run => {
+    const ts = run.timestamp;
+    const friendly = ts.replace(/(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/, '$3/$2/$1 $4:$5');
+    return `
+      <div class="run-row" onclick="viewRun('${data.id}','${ts}',${JSON.stringify(run.files)})">
+        <span class="ts">${friendly}</span>
+        <span class="fc">${run.files.length} file(s)</span>
+        <span class="run-view-btn">View →</span>
+      </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="patient-header">
+      <div class="patient-header-info">
+        <h1>${profile.name}</h1>
+        <div class="meta">
+          <span>Age ${profile.age}</span>
+          <span class="dot">·</span>
+          <span>${profile.stage} stage</span>
+          ${profile.primary_family_contact ? `<span class="dot">·</span><span>${profile.primary_family_contact}</span>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <div class="patient-detail-grid">
+      <div class="info-card">
+        <h4>Emotional Anchors</h4>
+        <div class="tag-list">${anchors || '<span class="text-muted">None set</span>'}</div>
+      </div>
+      <div class="info-card">
+        <h4>Calming Topics</h4>
+        <div class="tag-list">${calming || '<span class="text-muted">None set</span>'}</div>
+        <h4 style="margin-top:14px">Avoid</h4>
+        <div class="tag-list">${avoid || '<span class="text-muted">None set</span>'}</div>
+      </div>
+      <div class="info-card">
+        <h4>Memory Bank — ${memories.length} memories</h4>
+        <div class="value italic" style="font-size:1rem;margin-top:4px">${recentMemory}</div>
+      </div>
+      <div class="info-card">
+        <h4>Family Photos — ${photos.length}</h4>
+        <div class="photo-strip">${photoThumbs || '<span class="text-muted" style="font-size:0.85rem">No photos yet</span>'}</div>
+      </div>
+    </div>
+
+    <div class="lucid-zone">
+      <p class="lucid-label">Lucid moment is happening now?</p>
+      <div class="lucid-btn-wrap">
+        <div class="lucid-ring"></div>
+        <div class="lucid-ring"></div>
+        <div class="lucid-ring"></div>
+        <button class="lucid-btn" onclick="triggerLucidNow('${data.id}','${profile.name}')">
+          <span class="lucid-btn-word">Trigger</span>
+          <span class="lucid-btn-word big">Lucid Now</span>
+          <span class="lucid-btn-word">package</span>
+        </button>
+      </div>
+    </div>
+
+    ${artifact_runs && artifact_runs.length > 0 ? `
+    <div class="history-section">
+      <h3>Previous Packages</h3>
+      ${runRows}
+    </div>` : ''}
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LUCID NOW
+═══════════════════════════════════════════════════════════ */
+async function triggerLucidNow(patientId, patientName) {
+  state.currentPatientId = patientId;
+
+  document.getElementById('lucid-patient-name').textContent = `A moment for ${patientName}`;
+  document.getElementById('lucid-status-text').textContent = 'Preparing your package...';
+
+  // Reset tiles
+  ['letter','voice','photo_story','dialogue_guide'].forEach(k => {
+    const tile = document.getElementById(`tile-${k}`);
+    tile.className = 'artifact-tile';
+    const st = document.getElementById(`status-${k}`);
+    st.className = 'tile-status';
+    st.innerHTML = 'Waiting...';
+  });
+
+  document.getElementById('lucid-complete-btn').classList.remove('visible');
+  document.getElementById('mode-note').classList.remove('visible');
+
+  showScreen('lucid');
+
+  try {
+    const { job_id } = await api(`/patients/${patientId}/lucid_now`, 'POST');
+    state.currentJob = job_id;
+    listenToJob(job_id);
+  } catch (e) {
+    document.getElementById('lucid-status-text').textContent = 'Error: ' + e.message;
+    toast('Failed to start generation: ' + e.message, true);
+  }
+}
+
+function listenToJob(jobId) {
+  const es = new EventSource(`/api/jobs/${jobId}/stream`);
+  es.onmessage = (e) => {
+    const job = JSON.parse(e.data);
+    updateLucidUI(job);
+    if (job.status === 'done' || job.status === 'error') {
+      es.close();
+    }
+  };
+  es.onerror = () => {
+    es.close();
+    // Fallback: poll
+    pollJob(jobId);
+  };
+}
+
+function pollJob(jobId) {
+  const interval = setInterval(async () => {
+    try {
+      const job = await api(`/jobs/${jobId}`);
+      updateLucidUI(job);
+      if (job.status === 'done' || job.status === 'error') {
+        clearInterval(interval);
+      }
+    } catch {}
+  }, 800);
+}
+
+function updateLucidUI(job) {
+  const steps = job.steps || {};
+
+  Object.entries(steps).forEach(([key, status]) => {
+    const tile = document.getElementById(`tile-${key}`);
+    const st   = document.getElementById(`status-${key}`);
+    if (!tile || !st) return;
+
+    tile.className = 'artifact-tile';
+    st.className   = 'tile-status';
+
+    if (status === 'running') {
+      tile.classList.add('generating');
+      st.classList.add('gen');
+      st.innerHTML = `<span class="spinner"></span> Generating...`;
+    } else if (status === 'done') {
+      tile.classList.add('done');
+      st.classList.add('done');
+      st.innerHTML = `<svg class="check" viewBox="0 0 24 24" fill="none" stroke="#e8b86a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Ready`;
+    } else if (status === 'skipped') {
+      tile.classList.add('skipped');
+      st.textContent = 'Skipped';
+    } else if (typeof status === 'string' && status.startsWith('error')) {
+      tile.classList.add('error');
+      st.classList.add('error');
+      st.textContent = 'Error';
+    }
+  });
+
+  if (job.status === 'running') {
+    document.getElementById('lucid-status-text').textContent = 'Generating your package...';
+  }
+
+  if (job.status === 'done') {
+    document.getElementById('lucid-status-text').textContent = 'Everything is ready.';
+    state.currentJobTimestamp = job.timestamp;
+
+    const btn = document.getElementById('lucid-complete-btn');
+    btn.classList.add('visible');
+
+    const note = document.getElementById('mode-note');
+    note.textContent = job.mode === 'demo'
+      ? 'Generated with demo content. Add ANTHROPIC_API_KEY to .env for live Claude generation.'
+      : 'Generated live with Claude claude-sonnet-4-6.';
+    note.classList.add('visible');
+  }
+
+  if (job.status === 'error') {
+    document.getElementById('lucid-status-text').textContent = 'An error occurred.';
+    toast('Generation error: ' + (job.errors?.general || 'unknown'), true);
+  }
+}
+
+function showArtifacts() {
+  viewRun(
+    state.currentPatientId,
+    state.currentJobTimestamp,
+    null
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ARTIFACT GALLERY
+═══════════════════════════════════════════════════════════ */
+async function viewRun(patientId, timestamp, filesHint) {
+  state.currentArtifactTimestamp = timestamp;
+  state.currentPatientId = patientId;
+  showScreen('artifacts');
+
+  const body = document.getElementById('artifacts-body');
+  body.innerHTML = `<div style="text-align:center;padding:60px;color:var(--muted)">Loading artifacts...</div>`;
+
+  // Get file list from server if not provided
+  let files = filesHint;
+  if (!files) {
+    try {
+      const data = await api(`/patients/${patientId}`);
+      const run = (data.artifact_runs || []).find(r => r.timestamp === timestamp);
+      files = run ? run.files : [];
+    } catch { files = []; }
+  }
+
+  const ts = timestamp.replace(/(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/, '$3/$2/$1 at $4:$5');
+
+  const makeFileUrl = (fn) => `/api/files/${patientId}/${timestamp}/${fn}`;
+
+  // Categorize files
+  const letter       = files.find(f => f.startsWith('letter'));
+  const voice        = files.find(f => f.startsWith('voice'));
+  const photoStory   = files.find(f => f.startsWith('photo_story'));
+  const dialogueGuide = files.find(f => f.startsWith('dialogue_guide'));
+
+  // Fetch voice text content if it's a .txt
+  let voiceContent = '';
+  let voiceIsText = false;
+  if (voice && voice.endsWith('.txt')) {
+    voiceIsText = true;
+    try {
+      const r = await fetch(makeFileUrl(voice));
+      voiceContent = await r.text();
+    } catch {}
+  }
+
+  const cards = [];
+
+  if (letter) {
+    cards.push(`
+      <div class="artifact-card" style="animation-delay:0.05s">
+        <div class="artifact-card-header">
+          <div class="artifact-card-title"><span>✉️</span> Written Letter</div>
+          <a class="download-btn" href="${makeFileUrl(letter)}" download="${letter}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download PDF
+          </a>
+        </div>
+        <iframe class="pdf-frame" src="${makeFileUrl(letter)}"></iframe>
+      </div>`);
+  }
+
+  if (voice) {
+    if (voiceIsText) {
+      const scriptMatch = voiceContent.match(/\-{5,}\n\n([\s\S]+?)\n\n\-{5,}/);
+      const script = scriptMatch ? scriptMatch[1].trim() : voiceContent;
+      const instructions = voiceContent.includes('PLAYBACK') ? voiceContent.split('PLAYBACK')[1] : '';
+      cards.push(`
+        <div class="artifact-card" style="animation-delay:0.1s">
+          <div class="artifact-card-header">
+            <div class="artifact-card-title"><span>🎙️</span> Voice Message</div>
+            <a class="download-btn" href="${makeFileUrl(voice)}" download="${voice}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Script
+            </a>
+          </div>
+          <div class="voice-display">
+            <div class="voice-script-text">"${script}"</div>
+            <div class="voice-instructions">
+              <strong style="color:var(--amber)">No ElevenLabs key?</strong> Record a family member reading this script aloud (~30 seconds) — or add ELEVENLABS_API_KEY to .env and re-run for a synthesized voice message.
+            </div>
+          </div>
+        </div>`);
+    } else {
+      cards.push(`
+        <div class="artifact-card" style="animation-delay:0.1s">
+          <div class="artifact-card-header">
+            <div class="artifact-card-title"><span>🎙️</span> Voice Message</div>
+            <a class="download-btn" href="${makeFileUrl(voice)}" download="${voice}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download MP3
+            </a>
+          </div>
+          <div class="voice-display">
+            <audio controls src="${makeFileUrl(voice)}"></audio>
+          </div>
+        </div>`);
+    }
+  }
+
+  if (photoStory) {
+    cards.push(`
+      <div class="artifact-card" style="animation-delay:0.15s">
+        <div class="artifact-card-header">
+          <div class="artifact-card-title"><span>🖼️</span> Photo Story</div>
+          <a class="download-btn" href="${makeFileUrl(photoStory)}" download="${photoStory}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download PDF
+          </a>
+        </div>
+        <iframe class="pdf-frame" src="${makeFileUrl(photoStory)}"></iframe>
+      </div>`);
+  }
+
+  if (dialogueGuide) {
+    cards.push(`
+      <div class="artifact-card" style="animation-delay:0.2s">
+        <div class="artifact-card-header">
+          <div class="artifact-card-title"><span>💬</span> Dialogue Guide</div>
+          <a class="download-btn" href="${makeFileUrl(dialogueGuide)}" download="${dialogueGuide}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download PDF
+          </a>
+        </div>
+        <iframe class="pdf-frame" src="${makeFileUrl(dialogueGuide)}"></iframe>
+      </div>`);
+  }
+
+  body.innerHTML = `
+    <h2 class="artifact-gallery-title">Lucid Moment Package</h2>
+    <p class="artifact-gallery-sub">Generated ${ts} &nbsp;·&nbsp; ${files.length} artifact(s)</p>
+    <div class="artifact-gallery-grid">
+      ${cards.join('')}
+    </div>
+  `;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ONBOARDING
+═══════════════════════════════════════════════════════════ */
+function showOnboarding(patientId) {
+  state.obPatientId = patientId;
+  state.obMemories  = [];
+  state.obPhotos    = [];
+  state.obVoice     = null;
+  state.obTone      = 'warm';
+  state.obStep      = 1;
+
+  // Reset all step panels
+  document.querySelectorAll('.step-panel').forEach((p, i) => {
+    p.classList.toggle('active', i === 0);
+  });
+  document.getElementById('ob-memory-count').textContent = '0';
+  document.getElementById('ob-memory-list').innerHTML = '';
+  document.getElementById('ob-memory-text').value = '';
+  document.getElementById('photo-chips').innerHTML = '';
+  document.getElementById('voice-chips').innerHTML = '';
+  document.getElementById('ob-existing-picker').classList.add('hidden');
+  document.getElementById('ob-new-form').classList.add('hidden');
+
+  updateProgress();
+  showScreen('onboarding');
+}
+
+function exitOnboarding() {
+  if (state.role === 'caregiver') {
+    loadPatients().then(() => showScreen('patients'));
+  } else {
+    showScreen('landing');
+  }
+}
+
+function updateProgress() {
+  const pct = ((state.obStep - 1) / (state.obTotalSteps - 1)) * 100;
+  document.getElementById('ob-progress-fill').style.width = pct + '%';
+  document.getElementById('ob-progress-label').textContent = `Step ${state.obStep} of ${state.obTotalSteps}`;
+}
+
+function goToStep(n) {
+  document.querySelectorAll('.step-panel').forEach((p, i) => {
+    p.classList.toggle('active', i === n - 1);
+  });
+  state.obStep = n;
+  updateProgress();
+  window.scrollTo(0, 0);
+}
+
+function obNext() { goToStep(Math.min(state.obStep + 1, state.obTotalSteps)); }
+function obPrev() { goToStep(Math.max(state.obStep - 1, 1)); }
+
+function obNext() {
+  const next = Math.min(state.obStep + 1, state.obTotalSteps);
+  goToStep(next);
+}
+
+function obSelectPatient(mode) {
+  document.getElementById('ob-existing-picker').classList.toggle('hidden', mode !== 'existing');
+  document.getElementById('ob-new-form').classList.toggle('hidden', mode !== 'new');
+
+  if (mode === 'existing') {
+    api('/patients').then(patients => {
+      const sel = document.getElementById('ob-patient-select');
+      sel.innerHTML = patients.map(p =>
+        `<option value="${p.id}">${p.profile.name || p.id}</option>`
+      ).join('');
+    });
+  }
+}
+
+function obPickExisting() {
+  const sel = document.getElementById('ob-patient-select');
+  state.obPatientId = sel.value;
+  obNext();
+}
+
+async function obCreatePatient() {
+  const name = document.getElementById('ob-patient-name').value.trim();
+  if (!name) { toast('Please enter the patient\'s name.', true); return; }
+
+  const anchors = document.getElementById('ob-anchors').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const calming  = document.getElementById('ob-calming').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const avoid    = document.getElementById('ob-avoid').value.split(',').map(s=>s.trim()).filter(Boolean);
+
+  const body = {
+    name,
+    age: parseInt(document.getElementById('ob-age').value) || 0,
+    stage: document.getElementById('ob-stage').value,
+    primary_family_contact: '',
+    emotional_anchors: anchors,
+    calming_topics: calming,
+    avoid_topics: avoid,
+    current_mood_baseline: '',
+    best_time_of_day: '',
+  };
+
+  try {
+    const r = await api('/patients', 'POST', body);
+    state.obPatientId = r.patient_id;
+    toast(`Profile created for ${name}`);
+    obNext();
+  } catch (e) {
+    toast('Error creating profile: ' + e.message, true);
+  }
+}
+
+function setTone(btn, tone) {
+  document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.obTone = tone;
+}
+
+async function obAddMemory() {
+  const submitter = document.getElementById('ob-submitter').value.trim() || 'Family member';
+  const rel       = document.getElementById('ob-relationship').value.trim() || 'family';
+  const text      = document.getElementById('ob-memory-text').value.trim();
+
+  if (!text) { toast('Please write a memory before adding.', true); return; }
+  if (!state.obPatientId) { toast('No patient selected.', true); return; }
+  if (state.obMemories.length >= 10) { toast('Maximum 10 memories reached.', true); return; }
+
+  const mem = {
+    submitted_by: submitter,
+    relationship: rel,
+    memory_text: text,
+    emotional_tone: state.obTone,
+    associated_photos: [],
+  };
+
+  try {
+    await api(`/patients/${state.obPatientId}/memories`, 'POST', mem);
+    state.obMemories.push(mem);
+
+    const n = state.obMemories.length;
+    document.getElementById('ob-memory-count').textContent = n;
+    document.getElementById('ob-memory-text').value = '';
+
+    const list = document.getElementById('ob-memory-list');
+    const item = document.createElement('div');
+    item.className = 'memory-item';
+    item.innerHTML = `<span class="mi-num">${n}</span><span class="mi-text">${text.slice(0,120)}${text.length>120?'...':''}</span>`;
+    list.appendChild(item);
+
+    if (n >= 10) {
+      document.getElementById('ob-add-memory-btn').disabled = true;
+      toast('10 memories saved. Click "Done adding →" to continue.');
+    } else {
+      toast(`Memory ${n} saved!`);
+    }
+  } catch (e) {
+    toast('Error saving memory: ' + e.message, true);
+  }
+}
+
+// Photo handling
+let pendingPhotos = [];
+function handlePhotoSelect(files) {
+  pendingPhotos = [...files];
+  const chips = document.getElementById('photo-chips');
+  chips.innerHTML = Array.from(files).map(f =>
+    `<span class="file-chip">🖼️ ${f.name}</span>`
+  ).join('');
+}
+
+async function obUploadPhotos() {
+  if (!pendingPhotos.length) { obNext(); return; }
+
+  for (const file of pendingPhotos) {
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      await fetch(`/api/patients/${state.obPatientId}/upload_photo`, { method:'POST', body:fd });
+    } catch (e) { toast('Upload failed: ' + e.message, true); }
+  }
+  toast(`${pendingPhotos.length} photo(s) uploaded!`);
+  pendingPhotos = [];
+  obNext();
+}
+
+// Voice handling
+let pendingVoice = null;
+function handleVoiceSelect(files) {
+  pendingVoice = files[0] || null;
+  const chips = document.getElementById('voice-chips');
+  chips.innerHTML = pendingVoice ? `<span class="file-chip">🎙️ ${pendingVoice.name}</span>` : '';
+}
+
+async function obUploadVoice() {
+  if (!pendingVoice) { obNext(); return; }
+
+  const fd = new FormData();
+  fd.append('file', pendingVoice);
+  try {
+    const r = await fetch(`/api/patients/${state.obPatientId}/upload_voice`, { method:'POST', body:fd });
+    const data = await r.json();
+    // Attach voice sample filename to any existing memories
+    toast('Voice sample uploaded!');
+  } catch (e) {
+    toast('Upload failed: ' + e.message, true);
+  }
+  pendingVoice = null;
+  obNext();
+}
+
+// Drag & drop
+['photo-dropzone','voice-dropzone'].forEach(id => {
+  const dz = document.getElementById(id);
+  if (!dz) return;
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    if (id === 'photo-dropzone') handlePhotoSelect(files);
+    else handleVoiceSelect(files);
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+window.addEventListener('load', () => {
+  // Hide loader
+  setTimeout(() => {
+    const loader = document.getElementById('page-loader');
+    loader.classList.add('hidden');
+    setTimeout(() => loader.style.display = 'none', 600);
+  }, 800);
+
+  showScreen('landing');
+});
+</script>
+</body>
+</html>

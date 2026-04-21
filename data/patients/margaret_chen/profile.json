@@ -1,0 +1,22 @@
+{
+  "name": "Margaret Chen",
+  "age": 79,
+  "stage": "moderate",
+  "primary_family_contact": "David Chen (son)",
+  "emotional_anchors": [
+    "Sunday cooking",
+    "Galveston pier",
+    "late husband George"
+  ],
+  "calming_topics": [
+    "garden",
+    "her dog Biscuit",
+    "Frank Sinatra music"
+  ],
+  "avoid_topics": [
+    "her sister's death",
+    "the accident"
+  ],
+  "current_mood_baseline": "gentle, sometimes anxious in late afternoon",
+  "best_time_of_day": "mid-morning"
+}

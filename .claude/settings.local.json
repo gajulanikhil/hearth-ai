@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install *)",
+      "Bash(python3 -m pip --version)",
+      "Bash(python3 -m pip install anthropic \"elevenlabs>=1.0.0\" fpdf2 Pillow python-dotenv --quiet)",
+      "Bash(python3 -m pip install anthropic fpdf2 Pillow python-dotenv --quiet)",
+      "Bash(python3 *)",
+      "Bash(env)",
+      "Read(//c/Users/gajul/.config/anthropic/**)",
+      "Read(//c/Users/gajul/.config//**)",
+      "Bash(cat /c/Users/gajul/.config/configstore/*.json)",
+      "Bash(start '' 'F:/JSOM MSBUAN/Spring 2026/BUAN 6V99 AI Agentic/Git/presentation2/hearth-ai/data/outputs/margaret_chen/20260420_213747/letter_margaret_chen_20260420_213747.pdf')",
+      "Bash(start '' 'F:/JSOM MSBUAN/Spring 2026/BUAN 6V99 AI Agentic/Git/presentation2/hearth-ai/data/outputs/margaret_chen/20260420_213747/photo_story_margaret_chen_20260420_213747.pdf')",
+      "Bash(start '' 'F:/JSOM MSBUAN/Spring 2026/BUAN 6V99 AI Agentic/Git/presentation2/hearth-ai/data/outputs/margaret_chen/20260420_213747/dialogue_guide_margaret_chen_20260420_213747.pdf')",
+      "Bash(start '' 'F:/JSOM MSBUAN/Spring 2026/BUAN 6V99 AI Agentic/Git/presentation2/hearth-ai/data/outputs/margaret_chen/20260420_213843/letter_margaret_chen_20260420_213843.pdf')",
+      "Bash(start '' 'F:/JSOM MSBUAN/Spring 2026/BUAN 6V99 AI Agentic/Git/presentation2/hearth-ai/data/outputs/margaret_chen/20260420_213843/dialogue_guide_margaret_chen_20260420_213843.pdf')",
+      "Bash(start '' 'F:/JSOM MSBUAN/Spring 2026/BUAN 6V99 AI Agentic/Git/presentation2/hearth-ai/data/outputs/margaret_chen/20260420_213843/photo_story_margaret_chen_20260420_213843.pdf')",
+      "Bash(python app.py)",
+      "Bash(curl -s http://localhost:8000/api/status)",
+      "Bash(curl -s http://localhost:8000/api/patients)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/)",
+      "Bash(curl -s http://localhost:8000/api/patients/margaret_chen)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('memories:', len\\(d['memories']\\), '| photos:', len\\(d['photos']\\), '| runs:', len\\(d['artifact_runs']\\)\\); print\\('latest run:', d['artifact_runs'][0] if d['artifact_runs'] else 'none'\\)\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8000/api/files/margaret_chen/20260420_213843/letter_margaret_chen_20260420_213843.pdf\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8000/api/photos/margaret_chen/photo_1.jpg\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8000/api/photos/margaret_chen/galveston_1987.jpg\")"
+    ]
+  }
+}

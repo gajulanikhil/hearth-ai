@@ -1,0 +1,266 @@
+HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-HEARTH -- VOICE MESSAGE SCRIPT
+==============================
+
+From: David Chen (son)
+
+-
+
+Mom, it's David. I was thinking about you today, about that Sunday morning smell — garlic going in Saturday night, you up before anyone, knowing exactly what you were doing. And I thought about Galveston, you and Dad on the pier in the morning light. He said the Gulf looked like hammered tin. You loved that. So do I. Those are good things to carry, Mom. I love you. I'll see you very soon.
+
+--------------------------------------------------
+
+PLAYBACK INSTRUCTIONS:
+This script was generated by Hearth but could not be synthesized as audio
+because no ElevenLabs API key was provided.
+
+To create audio:
+  1. Set ELEVENLABS_API_KEY in your .env file and re-run lucid_now, OR
+  2. Record a family member reading this script (60-80 words, ~30 seconds), OR
+  3. Use any text-to-speech tool to generate audio from this script.
+
+The script above is written to be read aloud in a warm, personal voice.
