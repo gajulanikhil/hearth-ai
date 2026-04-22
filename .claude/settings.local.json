@@ -54,7 +54,8 @@
       "Bash(pkill -f \"uvicorn app:app\")",
       "Bash(taskkill //F //PID 13272)",
       "Bash(pip show *)",
-      "Bash(taskkill //F //PID 29492)"
+      "Bash(taskkill //F //PID 29492)",
+      "Bash(taskkill //F //PID 11940)"
     ]
   }
 }

@@ -63,21 +63,10 @@ def generate_letter_pdf(letter_text: str, profile: dict, output_path: Path) -> P
 
     pdf.set_y(22)
 
-    # ── Decorative top ornament ──────────────────────────────────────────────
-    pdf.set_font("Times", style="I", size=13)
-    pdf.set_text_color(180, 130, 60)
-    pdf.cell(0, 8, _safe("~ ~ ~"), ln=True, align="C")
-    pdf.ln(2)
-
     # ── Title: A letter to {patient_first} ──────────────────────────────────
     pdf.set_font("Times", style="B", size=24)
     pdf.set_text_color(110, 70, 20)
     pdf.cell(0, 12, _safe(f"A Letter to {patient_first}"), ln=True, align="C")
-
-    # ── Subtitle: from {family_member} ──────────────────────────────────────
-    pdf.set_font("Times", style="I", size=13)
-    pdf.set_text_color(155, 110, 55)
-    pdf.cell(0, 8, _safe(f"from {family_display}"), ln=True, align="C")
     pdf.ln(4)
 
     # ── Divider rule ─────────────────────────────────────────────────────────
@@ -110,9 +99,6 @@ def generate_letter_pdf(letter_text: str, profile: dict, output_path: Path) -> P
     pdf.set_line_width(0.6)
     pdf.line(38, pdf.get_y(), 172, pdf.get_y())
     pdf.ln(5)
-    pdf.set_font("Times", style="I", size=13)
-    pdf.set_text_color(180, 130, 60)
-    pdf.cell(0, 8, _safe("~ ~ ~"), ln=True, align="C")
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
