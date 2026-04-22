@@ -18,31 +18,82 @@ When a lucid moment happens, the caregiver taps one button. In under 60 seconds,
 
 | Artifact | What it is |
 |---|---|
-| 📄 **Letter** | A written letter in the family member's voice, referencing real shared memories. As if they wrote it this morning. |
-| 🎙️ **Voice message** | A short audio message synthesized in the family member's actual cloned voice (via ElevenLabs). |
-| 🖼️ **Photo story** | Family photos with warm captions the caregiver reads aloud while showing the patient. |
-| 💬 **Dialogue guide** | A caregiver script — how to open, what to ask, what to show, how to respond if the patient gets anxious, how to close gently. |
+| **Letter** | A written letter in the family member's voice, referencing real shared memories. As if they wrote it this morning. |
+| **Voice message** | A short audio message synthesized in the family member's actual cloned voice (via ElevenLabs). |
+| **Photo story** | Family photos with warm captions the caregiver reads aloud while showing the patient. |
+| **Dialogue guide** | A caregiver script — how to open, what to ask, what to show, how to respond if the patient gets anxious, how to close gently. |
 
 The family's love is already there, waiting. The caregiver just delivers it.
+
+---
+
+## Architecture
+
+```
+Browser (SPA)
+    │
+    │  HTTP / Server-Sent Events
+    ▼
+FastAPI (app.py — port 8000)
+    ├── GET  /                        → serves index.html SPA
+    ├── GET  /api/patients            → list all patients
+    ├── POST /api/patients            → create patient profile
+    ├── GET  /api/patients/{id}       → patient detail + artifact history
+    ├── PUT  /api/patients/{id}/profile
+    ├── DELETE /api/patients/{id}
+    ├── POST /api/patients/{id}/memories
+    ├── POST /api/patients/{id}/upload_photo
+    ├── POST /api/patients/{id}/upload_voice
+    ├── POST /api/patients/{id}/lucid_now → enqueues job, returns job_id
+    ├── GET  /api/jobs/{job_id}        → job status (polling)
+    ├── GET  /api/jobs/{job_id}/stream → SSE real-time progress
+    ├── POST /api/chat/stream          → SSE caretaker AI chat
+    ├── POST /api/demo/setup           → creates demo patient
+    └── GET  /api/files/{patient}/{ts}/{file} → serve generated artifacts
+    │
+    ├── ThreadPoolExecutor (4 workers)
+    │       └── _run_lucid_now()
+    │               ├── HearthAgent.generate_letter()      → letter_generator.py → PDF
+    │               ├── HearthAgent.generate_voice_script() → voice_generator.py → MP3/TXT
+    │               ├── HearthAgent.generate_photo_captions() → photo_story.py → PDF
+    │               └── HearthAgent.generate_dialogue_guide() → dialogue_guide.py → PDF
+    │
+    └── memory_bank.py  (JSON flat-file store)
+            data/patients/{id}/profile.json
+            data/patients/{id}/memories.json
+            data/patients/{id}/photos/
+            data/patients/{id}/voice_samples/
+            data/outputs/{id}/{timestamp}/   ← generated artifacts
+```
+
+### Key design decisions
+
+- **Demo mode vs. live mode**: If no valid `OPENAI_API_KEY` is present, the pipeline automatically falls back to pre-generated demo content from `demo_run.py`. No crashes, no empty UI — the full artifact flow runs end-to-end in demo.
+- **SSE for job progress**: Artifact generation is blocking (PDF rendering, voice synthesis). The API offloads it to a thread pool and streams real-time step updates (`letter → running → done`, etc.) back to the browser via Server-Sent Events.
+- **Single-file SPA**: The entire frontend lives in `static/index.html` — no build step, no bundler. Pure HTML/CSS/JS served directly from FastAPI.
+- **Flat-file persistence**: Patient data is stored as JSON files under `data/`. No database dependency, easy to inspect and demo.
 
 ---
 
 ## How it works
 
 ```
-Phase 1 — Family onboards once
+Phase 1 — Family onboards once (web UI)
     ↓
-    Submits voice sample, photos, memories, relationships
+    Submits profile, memories, photos, voice sample
     ↓
 Phase 2 — Agent builds the memory map
     ↓
-    Claude reads everything, structures relationships, emotional anchors, recurring themes
+    GPT-4o reads everything, structures relationships,
+    emotional anchors, recurring themes
     ↓
-Phase 3 — Caregiver sees a lucid moment, taps "lucid_now"
+Phase 3 — Caregiver sees a lucid moment, taps "Lucid Moment Now"
     ↓
-Phase 4 — Four artifacts generate in parallel (< 60 seconds)
+Phase 4 — Four artifacts generate sequentially (< 60 seconds)
     ↓
     Letter · Voice · Photo story · Dialogue guide
+    ↓
+Phase 5 — Caregiver downloads and delivers artifacts at bedside
 ```
 
 ---
@@ -59,47 +110,28 @@ pip install -r requirements.txt
 
 ### 2. Set API keys
 
-Create a `.env` file in the project root:
+```bash
+cp .env.example .env
+# Edit .env and add your keys
+```
 
 ```env
-ANTHROPIC_API_KEY=your_claude_api_key
-ELEVENLABS_API_KEY=your_elevenlabs_key   # optional — voice artifact skipped if missing
+OPENAI_API_KEY=sk-...          # required for live generation
+ELEVENLABS_API_KEY=...         # optional — voice cloning; falls back to TTS script if missing
 ```
 
-### 3. Run the demo
+### 3. Start the app
 
 ```bash
-python sample_data/setup_demo.py           # creates fictional patient Margaret Chen
-python main.py lucid_now --patient margaret_chen
+python app.py
+# or: uvicorn app:app --reload --port 8000
 ```
 
-All four artifacts are generated and saved to `data/outputs/margaret_chen/[timestamp]/`.
+Open **http://localhost:8000** in your browser.
 
----
+### 4. Try the demo (no API key needed)
 
-## Usage
-
-### Onboarding a new patient
-
-```bash
-python main.py onboard --patient margaret_chen
-```
-
-Interactive CLI walks the family member through:
-- Name and relationship to patient
-- Up to 10 freeform memories
-- Photo file paths (copied into the patient's folder)
-- A voice sample (60 seconds is enough)
-
-Saved to `data/patients/margaret_chen/profile.json` and `memories.json`.
-
-### Triggering a lucid moment
-
-```bash
-python main.py lucid_now --patient margaret_chen
-```
-
-Loads the patient's memory bank, calls the agent, generates all four artifacts simultaneously, and writes them to `data/outputs/[patient]/[timestamp]/`.
+Click **"Load Demo Patient"** in the web UI — this creates Margaret Chen with five pre-loaded family memories. Then click **"Lucid Moment Now"** to generate all four artifacts using pre-generated demo content (no API call required).
 
 ---
 
@@ -107,40 +139,85 @@ Loads the patient's memory bank, calls the agent, generates all four artifacts s
 
 ```
 hearth/
-├── main.py                    # CLI entry point (onboard / lucid_now)
-├── agent.py                   # Claude-powered generation agent
-├── memory_bank.py             # Patient memory storage and retrieval
-├── voice_generator.py         # ElevenLabs voice synthesis
+├── app.py                     # FastAPI web server + REST API + SSE endpoints
+├── agent.py                   # GPT-4o artifact generation engine
+├── memory_bank.py             # Patient data storage and retrieval (JSON flat files)
+├── demo_run.py                # Pre-generated demo content (runs without API key)
+├── voice_generator.py         # ElevenLabs voice synthesis / TTS fallback
 ├── letter_generator.py        # PDF letter generation (fpdf2)
 ├── photo_story.py             # Captioned photo story PDF
 ├── dialogue_guide.py          # Caregiver dialogue script PDF
+├── main.py                    # Legacy CLI entry point (onboard / lucid_now)
+├── create_patients.py         # Script to bulk-create patient records
+├── build_pitch_deck.py        # Pitch deck generation utility
+├── static/
+│   └── index.html             # Single-page app (HTML + CSS + JS, no build step)
 ├── data/
-│   ├── patients/              # Per-patient profiles and memories
-│   └── outputs/               # Generated artifacts (timestamped)
+│   ├── patients/              # Per-patient profiles, memories, photos, voice samples
+│   └── outputs/               # Generated artifacts organized by patient + timestamp
 └── sample_data/
-    └── setup_demo.py          # Creates fictional demo patient
+    └── setup_demo.py          # Creates fictional demo patient Margaret Chen
 ```
 
 ---
 
 ## Tech stack
 
-- **Python 3** — application runtime
-- **Anthropic Claude** — the agent brain; reads memories, reasons about what matters, generates every artifact
-- **ElevenLabs** — voice cloning and synthesis from short voice samples
-- **fpdf2** — PDF generation for letter, photo story, and dialogue guide
-- **Pillow** — image handling for the photo story
-- **python-dotenv** — API key management
+| Layer | Technology |
+|---|---|
+| Web server | **FastAPI** + **Uvicorn** |
+| Frontend | Vanilla HTML/CSS/JS SPA (no framework, no build step) |
+| AI generation | **OpenAI GPT-4o** — letter, voice script, photo captions, dialogue guide |
+| Voice synthesis | **ElevenLabs** voice cloning from short samples |
+| PDF generation | **fpdf2** |
+| Image handling | **Pillow** |
+| Data store | JSON flat files (`data/`) |
+| Async jobs | Python `ThreadPoolExecutor` + Server-Sent Events |
+| Config | **python-dotenv** |
 
 ---
 
 ## The agent
 
-Hearth's system prompt:
+`agent.py` wraps GPT-4o with a focused system prompt and four artifact-specific sub-prompts:
 
 > *You are Hearth, a compassionate AI designed to help Alzheimer's patients feel connected to their families during lucid moments. You have deep knowledge of dementia care best practices. You generate artifacts that are warm, specific, simple, and grounded in real shared memories. You never use medical language. You never reference the disease. You speak only in warmth and memory. Every word you generate should make the patient feel loved and safe.*
 
-Each artifact has its own sub-prompt tuned for tone, length, and purpose — the letter is 200 words in first person, the voice script is 60–80 words, photo captions are 2–3 sentences each at 18pt minimum for accessibility, and the dialogue guide is structured for a caregiver to hold in their hand.
+Each artifact has its own sub-prompt tuned for tone, length, and purpose:
+
+| Artifact | Model instruction |
+|---|---|
+| Letter | ~200 words, first person as family member, specific memories, no salutation |
+| Voice script | 60–80 words exactly, natural spoken language, 1–2 concrete memories |
+| Photo captions | 2–3 sentences per photo, second person to patient, read-aloud friendly |
+| Dialogue guide | Structured JSON: opening · 5 memory prompts · photo sequence · if-distressed · closing |
+
+### Caretaker chat
+
+A separate streaming endpoint (`POST /api/chat/stream`) powers an always-on caretaker AI assistant in the UI. It is scoped to dementia care only — it declines unrelated questions, references the current patient's profile and memories, and streams tokens via SSE.
+
+---
+
+## API reference
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/patients` | List all patients |
+| `POST` | `/api/patients` | Create patient profile |
+| `GET` | `/api/patients/{id}` | Full patient detail + artifact history |
+| `PUT` | `/api/patients/{id}/profile` | Update profile fields |
+| `DELETE` | `/api/patients/{id}` | Delete patient + all artifacts |
+| `POST` | `/api/patients/{id}/memories` | Add a family memory |
+| `POST` | `/api/patients/{id}/upload_photo` | Upload a photo |
+| `POST` | `/api/patients/{id}/upload_voice` | Upload a voice sample |
+| `POST` | `/api/patients/{id}/lucid_now` | Trigger artifact generation → returns `job_id` |
+| `GET` | `/api/jobs/{job_id}` | Poll job status |
+| `GET` | `/api/jobs/{job_id}/stream` | SSE stream of live job progress |
+| `POST` | `/api/chat/stream` | SSE caretaker AI chat |
+| `POST` | `/api/demo/setup` | Load demo patient (Margaret Chen) |
+| `GET` | `/api/status` | Check if live API is available |
+| `GET` | `/api/files/{patient}/{ts}/{file}` | Download generated artifact |
+| `GET` | `/api/photos/{patient}/{file}` | Serve patient photo |
 
 ---
 
@@ -151,6 +228,7 @@ Each artifact has its own sub-prompt tuned for tone, length, and purpose — the
 - **Specificity over sentiment.** "Grandma Rose's brisket recipe" lands. "I love you" by itself doesn't.
 - **The caregiver is the messenger, not the author.** Every artifact is designed for a caregiver to deliver naturally in a calm room.
 - **Accessibility first.** Large fonts, simple language, clear structure. A caregiver under time pressure shouldn't have to decode anything.
+- **Zero-crash demo.** The full pipeline runs without any API key. Caregivers and stakeholders can see every artifact type before committing to setup.
 
 ---
 
@@ -169,10 +247,15 @@ This repo is a course project and a working prototype — not a deployed clinica
 
 ## Roadmap
 
-- [ ] Web interface for caregivers (currently CLI-only)
+- [x] Four-artifact generation pipeline (letter, voice, photo story, dialogue guide)
+- [x] Web interface for caregivers
+- [x] Demo mode (no API key required)
+- [x] Real-time SSE job progress in the browser
+- [x] Caretaker AI chat assistant (scoped to dementia care)
+- [x] Photo and voice file upload
 - [ ] Family review queue before artifact delivery
-- [ ] Memory map visualization (show the agent's internal reasoning)
 - [ ] Multi-family-member voice support (multiple children, grandchildren)
+- [ ] Memory map visualization (show the agent's internal reasoning)
 - [ ] Longitudinal tracking of which artifacts land best for each patient
 - [ ] Clinical validation pilot with a care facility
 
