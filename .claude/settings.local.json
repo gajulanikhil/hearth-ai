@@ -42,7 +42,15 @@
       "Bash(python *)",
       "Bash(pkill -f \"python app.py\")",
       "Bash(pkill -f uvicorn)",
-      "Bash(echo \"Server starting with PID $!\")"
+      "Bash(echo \"Server starting with PID $!\")",
+      "Bash(awk '{print $5}')",
+      "Bash(taskkill //PID 28812 //F)",
+      "Bash(grep -v \"^0$\")",
+      "Bash(taskkill //PID 16168 //F)",
+      "Bash(echo \"Started PID $!\")",
+      "Bash(taskkill //PID 12472 //F)",
+      "Bash(taskkill //PID 32636 //F)",
+      "Bash(taskkill //PID 7160 //F)"
     ]
   }
 }

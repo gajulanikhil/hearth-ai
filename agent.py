@@ -1,14 +1,13 @@
 """
-agent.py — Claude-powered artifact generation engine.
+agent.py — OpenAI-powered artifact generation engine.
 
-Uses the Anthropic SDK with prompt caching on the shared system prompt and
-patient context. Makes four targeted calls to generate each artifact's content.
+Uses the OpenAI SDK to make targeted calls for each artifact.
 """
 
 import json
 import os
 
-import anthropic
+from openai import OpenAI, AuthenticationError
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,7 +21,7 @@ SYSTEM_PROMPT = (
     "you generate should make the patient feel loved and safe."
 )
 
-MODEL = "claude-sonnet-4-6"
+MODEL = "gpt-4o"
 
 
 def _clean_json(text: str) -> str:
@@ -30,9 +29,7 @@ def _clean_json(text: str) -> str:
     text = text.strip()
     if text.startswith("```"):
         lines = text.split("\n")
-        # Remove opening fence
         lines = lines[1:]
-        # Remove closing fence
         if lines and lines[-1].strip() == "```":
             lines = lines[:-1]
         text = "\n".join(lines).strip()
@@ -64,55 +61,27 @@ def _build_patient_context(profile: dict, memories: list) -> str:
 
 class HearthAgent:
     def __init__(self):
-        # Let the SDK discover the key from env, .env, or OS keychain.
-        # If ANTHROPIC_API_KEY is set in .env it takes precedence; otherwise
-        # the SDK uses whatever credential source it finds (e.g. Claude Code).
-        api_key = os.getenv("ANTHROPIC_API_KEY") or None
+        api_key = os.getenv("OPENAI_API_KEY") or None
         try:
-            self.client = anthropic.Anthropic(api_key=api_key)
-        except anthropic.AuthenticationError:
+            self.client = OpenAI(api_key=api_key)
+        except AuthenticationError:
             raise EnvironmentError(
-                "ANTHROPIC_API_KEY not found. Add it to your .env file:\n"
-                "  ANTHROPIC_API_KEY=sk-ant-..."
+                "OPENAI_API_KEY not found or invalid. Add it to your .env file:\n"
+                "  OPENAI_API_KEY=sk-..."
             )
 
     def _call(self, context: str, user_instruction: str, max_tokens: int = 1024) -> str:
-        """
-        Single API call with prompt caching on system prompt + patient context.
-        The system prompt and context blocks are marked ephemeral so they are cached
-        across multiple rapid calls (e.g., all four artifacts in one lucid_now run).
-        """
-        response = self.client.messages.create(
+        response = self.client.chat.completions.create(
             model=MODEL,
             max_tokens=max_tokens,
-            system=[
-                {
-                    "type": "text",
-                    "text": SYSTEM_PROMPT,
-                    "cache_control": {"type": "ephemeral"},
-                }
-            ],
             messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": context,
-                            "cache_control": {"type": "ephemeral"},
-                        },
-                        {
-                            "type": "text",
-                            "text": user_instruction,
-                        },
-                    ],
-                }
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": f"{context}\n\n{user_instruction}"},
             ],
         )
-        return response.content[0].text
+        return response.choices[0].message.content
 
     def generate_letter(self, profile: dict, memories: list) -> str:
-        """Generate a ~200-word personal letter from the family member to the patient."""
         context = _build_patient_context(profile, memories)
         family_member = profile["primary_family_contact"]
         patient_first = profile["name"].split()[0]
@@ -134,7 +103,6 @@ class HearthAgent:
         return self._call(context, instruction, max_tokens=800)
 
     def generate_voice_script(self, profile: dict, memories: list) -> str:
-        """Generate a 60-80 word spoken voice message script."""
         context = _build_patient_context(profile, memories)
         family_member = profile["primary_family_contact"]
         patient_first = profile["name"].split()[0]
@@ -154,11 +122,6 @@ class HearthAgent:
         return self._call(context, instruction, max_tokens=300)
 
     def generate_photo_captions(self, profile: dict, memories: list, photo_info: list) -> list:
-        """
-        Generate caregiver-read captions for each photo.
-        photo_info: list of {filename, context, missing_file?}
-        Returns: list of {filename, caption}
-        """
         context = _build_patient_context(profile, memories)
         patient_first = profile["name"].split()[0]
 
@@ -184,7 +147,6 @@ class HearthAgent:
         return json.loads(_clean_json(raw))
 
     def generate_dialogue_guide(self, profile: dict, memories: list) -> dict:
-        """Generate a structured caregiver dialogue guide."""
         context = _build_patient_context(profile, memories)
         patient_first = profile["name"].split()[0]
         family_member = profile["primary_family_contact"]

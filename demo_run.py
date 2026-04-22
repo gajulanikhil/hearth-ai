@@ -3,7 +3,7 @@ demo_run.py — Runs the full Hearth artifact pipeline with pre-generated conten
 
 This demonstrates every artifact generator (letter, voice, photo story, dialogue guide)
 without needing a live API call. Use this to verify the pipeline works, then
-set ANTHROPIC_API_KEY in .env and run:
+set OPENAI_API_KEY in .env and run:
     python main.py lucid_now --patient margaret_chen
 for the live agent-driven version.
 """
@@ -25,7 +25,7 @@ PATIENT_ID = "margaret_chen"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PRE-GENERATED ARTIFACT CONTENT
-# (This is what the Hearth agent — claude-sonnet-4-6 — would produce from
+# (This is what the Hearth agent — gpt-4o — would produce from
 #  the five memories David Chen submitted for Margaret Chen.)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -216,8 +216,8 @@ def run_demo() -> None:
     for key, path in results.items():
         print(f"    {path}")
     print()
-    print("  To run with live Claude API:")
-    print("    1. Add ANTHROPIC_API_KEY to .env")
+    print("  To run with live OpenAI API:")
+    print("    1. Add OPENAI_API_KEY to .env")
     print("    2. python main.py lucid_now --patient margaret_chen")
     print()
 
