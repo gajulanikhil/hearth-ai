@@ -11,25 +11,25 @@
    CSS CUSTOM PROPERTIES
 ═══════════════════════════════════════════════════════════ */
 :root {
-  --bg-void:    #08050302;
-  --bg-deep:    #0d0804;
-  --bg-surface: #17100a;
-  --bg-card:    #201509;
-  --bg-card-2:  #2a1c0e;
-  --bg-input:   #1a1009;
+  --bg-void:    #fdf9f4;
+  --bg-deep:    #faf5ee;
+  --bg-surface: #f2e9dc;
+  --bg-card:    #ffffff;
+  --bg-card-2:  #faf5ef;
+  --bg-input:   #fffdf9;
 
-  --amber:      #c4883a;
-  --gold:       #e8b86a;
-  --flame:      #f06830;
-  --cream:      #f0e6d6;
-  --cream-dim:  #b09070;
-  --muted:      #7a5c3a;
+  --amber:      #b87430;
+  --gold:       #9a5e14;
+  --flame:      #d04c14;
+  --cream:      #261508;
+  --cream-dim:  #6a4220;
+  --muted:      #9e7248;
 
-  --border:     rgba(196, 136, 58, 0.18);
-  --border-hot: rgba(232, 184, 106, 0.55);
-  --glow-sm:    0 0 20px rgba(232, 184, 106, 0.12);
-  --glow-md:    0 0 40px rgba(232, 184, 106, 0.22);
-  --glow-lg:    0 0 80px rgba(240, 104, 48, 0.35);
+  --border:     rgba(180, 130, 70, 0.20);
+  --border-hot: rgba(184, 116, 48, 0.55);
+  --glow-sm:    0 2px 16px rgba(176, 116, 48, 0.10);
+  --glow-md:    0 4px 28px rgba(176, 116, 48, 0.16);
+  --glow-lg:    0 8px 56px rgba(208, 76, 20, 0.18);
 
   --radius:     14px;
   --radius-lg:  22px;
@@ -57,7 +57,7 @@ input, textarea, select { font-family: inherit; }
 a { color: inherit; text-decoration: none; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-surface); }
-::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(180, 116, 48, 0.35); border-radius: 3px; }
 
 /* ═══════════════════════════════════════════════════════════
    PARTICLE CANVAS
@@ -84,8 +84,8 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 128px 128px;
-  opacity: 0.6;
-  mix-blend-mode: overlay;
+  opacity: 0.18;
+  mix-blend-mode: multiply;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -121,8 +121,9 @@ body::after {
   justify-content: space-between;
   padding: 20px 36px;
   border-bottom: 1px solid var(--border);
-  background: rgba(13, 8, 4, 0.7);
-  backdrop-filter: blur(12px);
+  background: rgba(253, 249, 244, 0.90);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 var(--border);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -371,6 +372,49 @@ body::after {
 .badge-mild     { background: rgba(100,180,100,0.12); color: #8bcf8b; border: 1px solid rgba(100,180,100,0.25); }
 .badge-severe   { background: rgba(200,80,80,0.12);  color: #cf8b8b; border: 1px solid rgba(200,80,80,0.25); }
 
+.patient-card-delete {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  opacity: 0;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  z-index: 10;
+  flex-shrink: 0;
+}
+.patient-card:hover .patient-card-delete {
+  opacity: 1;
+  border-color: rgba(200, 70, 70, 0.30);
+  color: #c07070;
+}
+.patient-card-delete:hover {
+  background: rgba(200, 70, 70, 0.10) !important;
+  border-color: rgba(200, 70, 70, 0.55) !important;
+  color: #c05050 !important;
+  transform: scale(1.1);
+}
+.btn-danger {
+  background: transparent;
+  color: #c07070;
+  font-size: 0.8rem;
+  padding: 8px 16px;
+  border-radius: 50px;
+  cursor: pointer;
+  border: 1px solid rgba(200,70,70,0.35);
+  transition: all 0.2s ease;
+  letter-spacing: 0.04em;
+}
+.btn-danger:hover { background: rgba(200,70,70,0.08); border-color: rgba(200,70,70,0.65); color: #b04040; }
+
 .add-patient-card {
   background: transparent;
   border: 1px dashed var(--border);
@@ -542,8 +586,8 @@ body::after {
   width: 160px;
   height: 160px;
   border-radius: 50%;
-  background: radial-gradient(circle, #2a1508 0%, #1a0c05 60%);
-  border: 2px solid rgba(240, 104, 48, 0.5);
+  background: radial-gradient(circle, #fff8f2 0%, #fdeee0 60%);
+  border: 2px solid rgba(208, 76, 20, 0.45);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -553,17 +597,17 @@ body::after {
   position: relative;
   z-index: 2;
   transition: all 0.4s var(--ease);
-  box-shadow: 0 0 40px rgba(240,104,48,0.25), inset 0 0 30px rgba(240,104,48,0.08);
+  box-shadow: 0 0 32px rgba(208,76,20,0.18), inset 0 0 24px rgba(208,76,20,0.06);
   animation: btn-breathe 3s ease-in-out infinite;
 }
 @keyframes btn-breathe {
-  0%, 100% { box-shadow: 0 0 40px rgba(240,104,48,0.25), inset 0 0 30px rgba(240,104,48,0.08); }
-  50%       { box-shadow: 0 0 70px rgba(240,104,48,0.5),  inset 0 0 40px rgba(240,104,48,0.15); }
+  0%, 100% { box-shadow: 0 0 32px rgba(208,76,20,0.18), inset 0 0 24px rgba(208,76,20,0.06); }
+  50%       { box-shadow: 0 0 60px rgba(208,76,20,0.38), inset 0 0 36px rgba(208,76,20,0.12); }
 }
 .lucid-btn:hover {
   transform: scale(1.06);
-  border-color: rgba(240,104,48,0.9);
-  box-shadow: 0 0 90px rgba(240,104,48,0.6), inset 0 0 40px rgba(240,104,48,0.2);
+  border-color: rgba(208,76,20,0.85);
+  box-shadow: 0 0 70px rgba(208,76,20,0.45), inset 0 0 32px rgba(208,76,20,0.14);
 }
 .lucid-btn:active { transform: scale(0.97); }
 .lucid-btn-word {
@@ -1115,7 +1159,7 @@ audio {
   font-size: 0.85rem;
   color: var(--cream);
   max-width: 320px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 24px rgba(100, 60, 20, 0.14);
   animation: toast-in 0.4s var(--ease) both;
   pointer-events: auto;
 }
@@ -1131,7 +1175,7 @@ audio {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(8, 5, 3, 0.85);
+  background: rgba(80, 50, 20, 0.42);
   backdrop-filter: blur(8px);
   z-index: 500;
   display: none;
@@ -1147,7 +1191,7 @@ audio {
   padding: 36px;
   max-width: 500px;
   width: 100%;
-  box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+  box-shadow: 0 8px 48px rgba(100, 60, 20, 0.18);
 }
 .modal h2 {
   font-family: var(--font-display);
@@ -1266,9 +1310,9 @@ audio {
   <!-- ─── SCREEN: PATIENTS ───────────────────────────────── -->
   <section id="screen-patients" class="screen">
     <nav class="nav">
-      <div class="nav-logo" onclick="showScreen('landing')">
+      <div class="nav-logo" onclick="navigateTo('landing')">
         <svg width="22" height="26" viewBox="0 0 100 120" fill="none">
-          <path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#e8b86a"/>
+          <path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#b87430"/>
         </svg>
         <span class="nav-logo-text">Hearth</span>
       </div>
@@ -1290,15 +1334,18 @@ audio {
   <!-- ─── SCREEN: PATIENT DETAIL ────────────────────────── -->
   <section id="screen-patient" class="screen">
     <nav class="nav">
-      <div class="nav-back" onclick="showScreen('patients')">
+      <div class="nav-back" onclick="goBack()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
         All Patients
       </div>
-      <div class="nav-logo" onclick="showScreen('landing')">
-        <svg width="22" height="26" viewBox="0 0 100 120" fill="none"><path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#e8b86a"/></svg>
+      <div class="nav-logo" onclick="navigateTo('landing')">
+        <svg width="22" height="26" viewBox="0 0 100 120" fill="none"><path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#b87430"/></svg>
         <span class="nav-logo-text">Hearth</span>
       </div>
-      <button class="btn-secondary" onclick="showOnboarding(state.currentPatientId)" style="font-size:0.8rem;padding:8px 16px">+ Add Memories</button>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn-secondary" onclick="showOnboarding(state.currentPatientId)" style="font-size:0.8rem;padding:8px 16px">+ Add Memories</button>
+        <button class="btn-danger" onclick="deletePatientFromDetail()">Delete Patient</button>
+      </div>
     </nav>
     <div class="patient-body" id="patient-body">
       <!-- filled by JS -->
@@ -1307,6 +1354,17 @@ audio {
 
   <!-- ─── SCREEN: LUCID NOW ─────────────────────────────── -->
   <section id="screen-lucid" class="screen">
+    <nav class="nav">
+      <div class="nav-back" onclick="goBack()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        Back
+      </div>
+      <div class="nav-logo" onclick="navigateTo('landing')">
+        <svg width="22" height="26" viewBox="0 0 100 120" fill="none"><path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#b87430"/></svg>
+        <span class="nav-logo-text">Hearth</span>
+      </div>
+      <span style="width:80px"></span>
+    </nav>
     <p class="lucid-patient-name" id="lucid-patient-name">Generating...</p>
     <p class="lucid-status-text" id="lucid-status-text">Preparing your package</p>
 
@@ -1343,12 +1401,12 @@ audio {
   <!-- ─── SCREEN: ARTIFACTS ─────────────────────────────── -->
   <section id="screen-artifacts" class="screen">
     <nav class="nav">
-      <div class="nav-back" id="artifacts-back" onclick="showScreen('patient')">
+      <div class="nav-back" id="artifacts-back" onclick="goBack()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
         Back
       </div>
-      <div class="nav-logo" onclick="showScreen('landing')">
-        <svg width="22" height="26" viewBox="0 0 100 120" fill="none"><path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#e8b86a"/></svg>
+      <div class="nav-logo" onclick="navigateTo('landing')">
+        <svg width="22" height="26" viewBox="0 0 100 120" fill="none"><path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#b87430"/></svg>
         <span class="nav-logo-text">Hearth</span>
       </div>
       <span style="width:80px"></span>
@@ -1365,8 +1423,8 @@ audio {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
         Back
       </div>
-      <div class="nav-logo">
-        <svg width="22" height="26" viewBox="0 0 100 120" fill="none"><path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#e8b86a"/></svg>
+      <div class="nav-logo" onclick="navigateTo('landing')">
+        <svg width="22" height="26" viewBox="0 0 100 120" fill="none"><path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#b87430"/></svg>
         <span class="nav-logo-text">Hearth</span>
       </div>
       <span style="width:80px"></span>
@@ -1555,6 +1613,7 @@ const state = {
   currentPatient: null,
   currentJob: null,
   currentJobTimestamp: null,
+  currentJobFiles: [],
   currentArtifactTimestamp: null,
   obPatientId: null,
   obSubmitter: '',
@@ -1566,6 +1625,9 @@ const state = {
   obStep: 1,
   obTotalSteps: 6,
 };
+
+// Cache of run files keyed by "patientId::timestamp" — avoids inline JSON in onclick attributes
+const _runFiles = {};
 
 /* ═══════════════════════════════════════════════════════════
    EMBER PARTICLE SYSTEM
@@ -1630,24 +1692,42 @@ const state = {
 /* ═══════════════════════════════════════════════════════════
    SCREEN NAVIGATION
 ═══════════════════════════════════════════════════════════ */
+const _navHistory = [];
+
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.remove('active');
     s.style.display = 'none';
   });
-
   const screen = document.getElementById(`screen-${name}`);
   if (!screen) return;
   screen.style.display = 'flex';
-  // Trigger reflow for animation
-  screen.offsetHeight;
+  screen.offsetHeight; // trigger reflow for animation
   screen.classList.add('active');
-
-  // Dim particles on non-landing screens
-  const canvas = document.getElementById('ember-canvas');
-  canvas.classList.toggle('dim', name !== 'landing');
-
+  document.getElementById('ember-canvas').classList.toggle('dim', name !== 'landing');
   window.scrollTo(0, 0);
+}
+
+function navigateTo(name) {
+  if (_navHistory[_navHistory.length - 1] !== name) {
+    _navHistory.push(name);
+  }
+  showScreen(name);
+}
+
+async function goBack() {
+  if (_navHistory.length > 1) {
+    _navHistory.pop();
+    const prev = _navHistory[_navHistory.length - 1];
+    showScreen(prev);
+    // Re-hydrate screens that need data
+    if (prev === 'patients') await loadPatients();
+    if (prev === 'patient' && state.currentPatientId) await loadPatientDetail(state.currentPatientId);
+  } else {
+    _navHistory.length = 0;
+    _navHistory.push('landing');
+    showScreen('landing');
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1705,7 +1785,7 @@ async function selectRole(role) {
   state.role = role;
   if (role === 'caregiver') {
     await loadPatients();
-    showScreen('patients');
+    navigateTo('patients');
   } else {
     showOnboarding(null);
   }
@@ -1718,7 +1798,7 @@ async function setupDemo() {
     toast('Margaret Chen is ready. Loading patients...');
     await loadPatients();
     state.role = 'caregiver';
-    showScreen('patients');
+    navigateTo('patients');
   } catch (e) {
     toast('Demo setup failed: ' + e.message, true);
   }
@@ -1753,10 +1833,14 @@ async function loadPatients() {
     card.className = 'patient-card';
     card.style.animationDelay = `${i * 0.07}s`;
     const stage = p.profile.stage || 'moderate';
+    const patientName = p.profile.name || p.id;
     card.innerHTML = `
       <div class="patient-card-accent"></div>
       <span class="patient-card-badge badge-${stage}">${stage}</span>
-      <h3>${p.profile.name || p.id}</h3>
+      <button class="patient-card-delete" title="Delete patient" onclick="deletePatient(event,'${p.id}','${patientName.replace(/'/g,"\\'")}')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <h3>${patientName}</h3>
       <div class="age-stage">Age ${p.profile.age || '—'} &nbsp;·&nbsp; ${p.profile.primary_family_contact || 'No family contact yet'}</div>
       <div class="patient-card-stats">
         <div class="patient-stat"><span class="n">${p.memory_count}</span><span class="l">Memories</span></div>
@@ -1770,11 +1854,47 @@ async function loadPatients() {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   DELETE PATIENT
+═══════════════════════════════════════════════════════════ */
+async function deletePatient(event, patientId, patientName) {
+  event.stopPropagation();
+  const confirmed = await openModal(
+    `Delete ${patientName}?`,
+    `This will permanently remove ${patientName}'s profile, all memories, photos, and generated packages. This cannot be undone.`
+  );
+  if (!confirmed) return;
+  try {
+    await api(`/patients/${patientId}`, 'DELETE');
+    toast(`${patientName} has been removed.`);
+    await loadPatients();
+  } catch (e) {
+    toast('Could not delete patient: ' + e.message, true);
+  }
+}
+
+async function deletePatientFromDetail() {
+  const name = state.currentPatient?.profile?.name || state.currentPatientId;
+  const confirmed = await openModal(
+    `Delete ${name}?`,
+    `This will permanently remove ${name}'s profile, all memories, photos, and generated packages. This cannot be undone.`
+  );
+  if (!confirmed) return;
+  try {
+    await api(`/patients/${state.currentPatientId}`, 'DELETE');
+    toast(`${name} has been removed.`);
+    await loadPatients();
+    navigateTo('patients');
+  } catch (e) {
+    toast('Could not delete patient: ' + e.message, true);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
    PATIENT DETAIL
 ═══════════════════════════════════════════════════════════ */
 async function loadPatientDetail(patientId) {
   state.currentPatientId = patientId;
-  showScreen('patient');
+  navigateTo('patient');
 
   const body = document.getElementById('patient-body');
   body.innerHTML = `<div style="text-align:center;padding:60px;color:var(--muted)">Loading...</div>`;
@@ -1804,11 +1924,16 @@ function renderPatientDetail(data) {
     ? `"${memories[memories.length - 1].memory_text.slice(0, 100)}..."`
     : 'No memories yet.';
 
+  // Populate run-file cache so onclick doesn't need inline JSON
+  (artifact_runs || []).forEach(run => {
+    _runFiles[`${data.id}::${run.timestamp}`] = run.files;
+  });
+
   const runRows = (artifact_runs || []).map(run => {
     const ts = run.timestamp;
     const friendly = ts.replace(/(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/, '$3/$2/$1 $4:$5');
     return `
-      <div class="run-row" onclick="viewRun('${data.id}','${ts}',${JSON.stringify(run.files)})">
+      <div class="run-row" onclick="viewRun('${data.id}','${ts}')">
         <span class="ts">${friendly}</span>
         <span class="fc">${run.files.length} file(s)</span>
         <span class="run-view-btn">View →</span>
@@ -1892,7 +2017,7 @@ async function triggerLucidNow(patientId, patientName) {
   document.getElementById('lucid-complete-btn').classList.remove('visible');
   document.getElementById('mode-note').classList.remove('visible');
 
-  showScreen('lucid');
+  navigateTo('lucid');
 
   try {
     const { job_id } = await api(`/patients/${patientId}/lucid_now`, 'POST');
@@ -1968,6 +2093,10 @@ function updateLucidUI(job) {
   if (job.status === 'done') {
     document.getElementById('lucid-status-text').textContent = 'Everything is ready.';
     state.currentJobTimestamp = job.timestamp;
+    // Store file list so View Artifacts works instantly without an extra API call
+    state.currentJobFiles = Object.values(job.results || {})
+      .filter(v => typeof v === 'string' && v !== 'true' && v !== 'false');
+    _runFiles[`${state.currentPatientId}::${job.timestamp}`] = state.currentJobFiles;
 
     const btn = document.getElementById('lucid-complete-btn');
     btn.classList.add('visible');
@@ -1989,7 +2118,7 @@ function showArtifacts() {
   viewRun(
     state.currentPatientId,
     state.currentJobTimestamp,
-    null
+    state.currentJobFiles.length ? state.currentJobFiles : null
   );
 }
 
@@ -1999,18 +2128,21 @@ function showArtifacts() {
 async function viewRun(patientId, timestamp, filesHint) {
   state.currentArtifactTimestamp = timestamp;
   state.currentPatientId = patientId;
-  showScreen('artifacts');
+  navigateTo('artifacts');
 
   const body = document.getElementById('artifacts-body');
   body.innerHTML = `<div style="text-align:center;padding:60px;color:var(--muted)">Loading artifacts...</div>`;
 
-  // Get file list from server if not provided
-  let files = filesHint;
+  // Resolve file list: explicit hint → cache → API fallback
+  let files = filesHint
+    || _runFiles[`${patientId}::${timestamp}`]
+    || null;
   if (!files) {
     try {
       const data = await api(`/patients/${patientId}`);
       const run = (data.artifact_runs || []).find(r => r.timestamp === timestamp);
       files = run ? run.files : [];
+      if (run) _runFiles[`${patientId}::${timestamp}`] = files;
     } catch { files = []; }
   }
 
@@ -2053,9 +2185,10 @@ async function viewRun(patientId, timestamp, filesHint) {
 
   if (voice) {
     if (voiceIsText) {
-      const scriptMatch = voiceContent.match(/\-{5,}\n\n([\s\S]+?)\n\n\-{5,}/);
-      const script = scriptMatch ? scriptMatch[1].trim() : voiceContent;
-      const instructions = voiceContent.includes('PLAYBACK') ? voiceContent.split('PLAYBACK')[1] : '';
+      const normalized = voiceContent.replace(/\r\n/g, '\n');
+      const scriptMatch = normalized.match(/\-{5,}\n\n([\s\S]+?)\n\n\-{5,}/);
+      const script = scriptMatch ? scriptMatch[1].trim() : normalized;
+      const instructions = normalized.includes('PLAYBACK') ? normalized.split('PLAYBACK')[1] : '';
       cards.push(`
         <div class="artifact-card" style="animation-delay:0.1s">
           <div class="artifact-card-header">
@@ -2150,14 +2283,14 @@ function showOnboarding(patientId) {
   document.getElementById('ob-new-form').classList.add('hidden');
 
   updateProgress();
-  showScreen('onboarding');
+  navigateTo('onboarding');
 }
 
 function exitOnboarding() {
   if (state.role === 'caregiver') {
-    loadPatients().then(() => showScreen('patients'));
+    loadPatients().then(() => navigateTo('patients'));
   } else {
-    showScreen('landing');
+    navigateTo('landing');
   }
 }
 
@@ -2178,11 +2311,6 @@ function goToStep(n) {
 
 function obNext() { goToStep(Math.min(state.obStep + 1, state.obTotalSteps)); }
 function obPrev() { goToStep(Math.max(state.obStep - 1, 1)); }
-
-function obNext() {
-  const next = Math.min(state.obStep + 1, state.obTotalSteps);
-  goToStep(next);
-}
 
 function obSelectPatient(mode) {
   document.getElementById('ob-existing-picker').classList.toggle('hidden', mode !== 'existing');
@@ -2351,13 +2479,13 @@ async function obUploadVoice() {
    INIT
 ═══════════════════════════════════════════════════════════ */
 window.addEventListener('load', () => {
-  // Hide loader
   setTimeout(() => {
     const loader = document.getElementById('page-loader');
     loader.classList.add('hidden');
     setTimeout(() => loader.style.display = 'none', 600);
   }, 800);
 
+  _navHistory.push('landing');
   showScreen('landing');
 });
 </script>

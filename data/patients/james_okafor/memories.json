@@ -1,0 +1,30 @@
+[
+  {
+    "submitted_by": "Amara Okafor",
+    "relationship": "daughter",
+    "memory_text": "Dad grew up in the Surulere neighborhood of Lagos. He always talks about going to the market with his mother on Saturdays — the smell of smoked fish and palm oil, the sound of generators and haggling. He said his mother could negotiate the price of anything down by half and do it while telling you a story. He says that is where he learned to talk to people.",
+    "associated_photos": [],
+    "emotional_tone": "nostalgic",
+    "voice_sample_file": null
+  },
+  {
+    "submitted_by": "Amara Okafor",
+    "relationship": "daughter",
+    "memory_text": "When I was twelve, Dad built our first house on Holcombe Street by himself on weekends. He had a full-time job at the refinery but woke up at six every Saturday and Sunday to work. The neighbor Mr. Petrov started helping every weekend and they became lifelong friends. Dad still drives by that house sometimes just to look at it.",
+    "associated_photos": [
+      "holcombe_house.jpg"
+    ],
+    "emotional_tone": "proud",
+    "voice_sample_file": null
+  },
+  {
+    "submitted_by": "Amara Okafor",
+    "relationship": "daughter",
+    "memory_text": "He coached the Westpark Tigers under-ten soccer team for fifteen years. His rule: every kid plays every game, no exceptions. He kept a notebook with every player he ever coached — their positions, what they were working on, what they were good at. He still has it. There are over two hundred names in it.",
+    "associated_photos": [
+      "soccer_team.jpg"
+    ],
+    "emotional_tone": "joyful",
+    "voice_sample_file": null
+  }
+]

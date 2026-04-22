@@ -71,7 +71,8 @@ def _save_text_fallback(script: str, output_path: Path, family_member: str) -> P
         "",
     ])
 
-    txt_path.write_text(content, encoding="utf-8")
+    with open(txt_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(content)
     return txt_path
 
 

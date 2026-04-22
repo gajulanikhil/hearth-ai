@@ -1,0 +1,17 @@
+{
+  "name": "ABCD",
+  "age": 15,
+  "stage": "moderate",
+  "primary_family_contact": "Lamborghini (Uncle)",
+  "emotional_anchors": [
+    "dance"
+  ],
+  "calming_topics": [
+    "cake"
+  ],
+  "avoid_topics": [
+    "accident"
+  ],
+  "current_mood_baseline": "",
+  "best_time_of_day": ""
+}

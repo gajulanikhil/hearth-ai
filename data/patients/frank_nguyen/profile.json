@@ -1,0 +1,22 @@
+{
+  "name": "Frank Nguyen",
+  "age": 68,
+  "stage": "mild",
+  "primary_family_contact": "Linh Nguyen (wife)",
+  "emotional_anchors": [
+    "arriving in Houston 1981",
+    "opening the pho restaurant on Bellaire",
+    "his mother teaching him to cook in Saigon"
+  ],
+  "calming_topics": [
+    "Vietnamese cooking",
+    "fishing at Galveston Bay",
+    "Bruce Lee movies"
+  ],
+  "avoid_topics": [
+    "the boat crossing",
+    "leaving Saigon"
+  ],
+  "current_mood_baseline": "cheerful and sociable, occasional word-finding difficulty",
+  "best_time_of_day": "morning"
+}

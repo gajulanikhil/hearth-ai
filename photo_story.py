@@ -25,36 +25,29 @@ def _safe(text: str) -> str:
 def _try_embed_image(pdf: FPDF, image_path: Path, x: float, y: float, max_w: float, max_h: float) -> Optional[float]:
     """
     Attempt to embed an image. Returns the height used, or None on failure.
-    Uses Pillow to check dimensions and handle format issues.
+    Reads the image fully into a BytesIO buffer before calling pdf.image so
+    the file handle is released before fpdf2 tries to access it (avoids
+    Windows file-lock conflicts).
     """
     try:
+        import io
         from PIL import Image
 
         with Image.open(image_path) as img:
+            img.load()  # force full read into memory
             orig_w, orig_h = img.size
-
-            # Convert non-RGB modes for PDF compatibility
             if img.mode not in ("RGB", "L"):
                 img = img.convert("RGB")
-
-            # Compute scaled dimensions preserving aspect ratio
             ratio = min(max_w / orig_w, max_h / orig_h)
             display_w = orig_w * ratio
             display_h = orig_h * ratio
+            buf = io.BytesIO()
+            img.save(buf, "JPEG", quality=90)
+            buf.seek(0)
 
-            # Save converted copy to a temp path if mode changed
-            if image_path.suffix.lower() not in (".jpg", ".jpeg"):
-                tmp = image_path.parent / (image_path.stem + "_hearth_tmp.jpg")
-                img.save(str(tmp), "JPEG", quality=90)
-                pdf.image(str(tmp), x=x, y=y, w=display_w, h=display_h)
-                try:
-                    tmp.unlink()
-                except Exception:
-                    pass
-            else:
-                pdf.image(str(image_path), x=x, y=y, w=display_w, h=display_h)
-
-            return display_h
+        # PIL file handle is now fully closed — safe to pass buffer to fpdf2
+        pdf.image(buf, x=x, y=y, w=display_w, h=display_h)
+        return display_h
 
     except Exception:
         return None

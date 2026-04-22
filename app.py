@@ -121,10 +121,13 @@ async def get_patient(patient_id: str):
     output_dir = ROOT / "data" / "outputs" / patient_id
     artifact_runs = []
     if output_dir.exists():
-        for run_dir in sorted(output_dir.iterdir(), reverse=True)[:5]:
+        for run_dir in sorted(output_dir.iterdir(), reverse=True):
             if run_dir.is_dir():
                 files = [f.name for f in sorted(run_dir.iterdir())]
-                artifact_runs.append({"timestamp": run_dir.name, "files": files})
+                if files:
+                    artifact_runs.append({"timestamp": run_dir.name, "files": files})
+                    if len(artifact_runs) >= 5:
+                        break
 
     return {
         "id": patient_id,
@@ -160,6 +163,19 @@ async def create_patient(req: ProfileRequest):
     profile = req.model_dump()
     memory_bank.save_profile(patient_id, profile)
     return {"patient_id": patient_id}
+
+
+@app.delete("/api/patients/{patient_id}")
+async def delete_patient(patient_id: str):
+    import shutil
+    patient_dir = ROOT / "data" / "patients" / patient_id
+    if not patient_dir.exists():
+        raise HTTPException(404, f"Patient '{patient_id}' not found.")
+    shutil.rmtree(patient_dir)
+    output_dir = ROOT / "data" / "outputs" / patient_id
+    if output_dir.exists():
+        shutil.rmtree(output_dir)
+    return {"success": True}
 
 
 @app.put("/api/patients/{patient_id}/profile")

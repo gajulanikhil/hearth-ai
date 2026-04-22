@@ -1,0 +1,22 @@
+{
+  "name": "Robert Hayes",
+  "age": 82,
+  "stage": "mild",
+  "primary_family_contact": "Carol Hayes (daughter)",
+  "emotional_anchors": [
+    "Navy service 1962-1966",
+    "fishing on Lake Travis",
+    "classic Ford Mustangs"
+  ],
+  "calming_topics": [
+    "baseball",
+    "woodworking",
+    "his golden retriever Duke"
+  ],
+  "avoid_topics": [
+    "Korea",
+    "his brother Jim passing"
+  ],
+  "current_mood_baseline": "alert and sociable in the mornings",
+  "best_time_of_day": "morning"
+}

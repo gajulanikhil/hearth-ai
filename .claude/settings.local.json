@@ -24,7 +24,22 @@
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('memories:', len\\(d['memories']\\), '| photos:', len\\(d['photos']\\), '| runs:', len\\(d['artifact_runs']\\)\\); print\\('latest run:', d['artifact_runs'][0] if d['artifact_runs'] else 'none'\\)\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8000/api/files/margaret_chen/20260420_213843/letter_margaret_chen_20260420_213843.pdf\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8000/api/photos/margaret_chen/photo_1.jpg\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8000/api/photos/margaret_chen/galveston_1987.jpg\")"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:8000/api/photos/margaret_chen/galveston_1987.jpg\")",
+      "Bash(netstat -ano)",
+      "Bash(curl -s http://localhost:8000)",
+      "Bash(pkill -f \"app:app\")",
+      "Bash(pkill -f \"uvicorn\")",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\('runs:', [\\(r['timestamp'], len\\(r['files']\\)\\) for r in d['artifact_runs']]\\)\")",
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(taskkill /F /IM python.exe)",
+      "PowerShell(Stop-Process *)",
+      "Bash(curl -s \"http://localhost:8000/api/patients/margaret_chen\")",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); [print\\(r['timestamp'], r['files']\\) for r in d['artifact_runs']]\")",
+      "Bash(curl -s -I \"http://localhost:8000/api/files/margaret_chen/20260421_171230/letter_margaret_chen_20260421_171230.pdf\")",
+      "Bash(curl *)",
+      "Bash(python -c \" import sys data = sys.stdin.buffer.read\\(\\) print\\('PDF starts with:', data[:4]\\) print\\('File size:', len\\(data\\)\\) \")",
+      "Bash(python -c \" from pathlib import Path p = Path\\('F:/JSOM MSBUAN/Spring 2026/BUAN 6V99 AI Agentic/Git/presentation2/hearth-ai/data/outputs/margaret_chen/20260421_171230/photo_story_margaret_chen_20260421_171230.pdf'\\) data = p.read_bytes\\(\\) print\\('PDF starts with:', data[:4]\\) print\\('File size:', len\\(data\\)\\) \")",
+      "Bash(python *)"
     ]
   }
 }
