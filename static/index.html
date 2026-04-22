@@ -927,6 +927,23 @@ body::after {
   color: var(--muted);
   line-height: 1.6;
 }
+.speak-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 14px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-hot);
+  background: var(--bg-card-2);
+  color: var(--amber);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, box-shadow 0.18s;
+}
+.speak-btn:hover { background: var(--bg-surface); box-shadow: var(--glow-sm); }
+.speak-btn.speaking { background: var(--bg-surface); color: var(--flame); border-color: var(--flame); }
 audio {
   width: 100%;
   margin-top: 12px;
@@ -2408,6 +2425,10 @@ async function viewRun(patientId, timestamp, filesHint) {
             </a>
           </div>
           <div class="voice-display">
+            <button class="speak-btn" id="speak-btn" onclick="toggleSpeak(this, ${JSON.stringify(script)})">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+              <span id="speak-btn-label">Read Aloud</span>
+            </button>
             <div class="voice-script-text">"${script}"</div>
             <div class="voice-instructions">
               <strong style="color:var(--amber)">No ElevenLabs key?</strong> Record a family member reading this script aloud (~30 seconds) — or add ELEVENLABS_API_KEY to .env and re-run for a synthesized voice message.
@@ -2836,6 +2857,28 @@ window.addEventListener('load', () => {
   _navHistory.push('landing');
   showScreen('landing');
 });
+
+let _speakUtterance = null;
+
+function toggleSpeak(btn, text) {
+  const label = document.getElementById('speak-btn-label');
+  if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+    btn.classList.remove('speaking');
+    label.textContent = 'Read Aloud';
+    return;
+  }
+  _speakUtterance = new SpeechSynthesisUtterance(text);
+  _speakUtterance.rate = 0.92;
+  _speakUtterance.pitch = 1;
+  _speakUtterance.onend = () => {
+    btn.classList.remove('speaking');
+    label.textContent = 'Read Aloud';
+  };
+  btn.classList.add('speaking');
+  label.textContent = 'Stop';
+  window.speechSynthesis.speak(_speakUtterance);
+}
 </script>
 </body>
 </html>
