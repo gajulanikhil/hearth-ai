@@ -100,57 +100,24 @@ def generate_voice_message(
 
     try:
         from elevenlabs.client import ElevenLabs
-        from elevenlabs import VoiceSettings
 
         client = ElevenLabs(api_key=os.getenv("ELEVENLABS_API_KEY"))
 
-        voice_sample = _find_voice_sample(voice_samples_dir, memories)
+        VOICE_ID = "pFZP5JQG7iQjIQuC4Bku"
+        print(f"  Synthesizing voice message for {patient_first}...")
 
-        if voice_sample is None:
-            print("  No voice sample found — saving voice script as text file.")
-            txt_path = _save_text_fallback(script, output_path, family_member)
-            return txt_path, False
-
-        print(f"  Cloning voice from: {voice_sample.name}")
-
-        # Instant Voice Cloning — creates a temporary voice from the sample
-        with open(voice_sample, "rb") as f:
-            cloned_voice = client.voices.ivc.create(
-                name=f"{family_member} (Hearth clone)",
-                files=[f],
-                description=f"Voice clone for Hearth — {family_member}",
-            )
-
-        voice_id = cloned_voice.voice_id
-        print(f"  Voice cloned. Synthesizing message for {patient_first}...")
-
-        # Synthesize speech
-        audio_generator = client.text_to_speech.convert(
-            voice_id=voice_id,
+        response = client.text_to_speech.convert(
+            voice_id=VOICE_ID,
             text=script,
-            model_id="eleven_multilingual_v2",
-            voice_settings=VoiceSettings(
-                stability=0.6,
-                similarity_boost=0.85,
-                style=0.3,
-                use_speaker_boost=True,
-            ),
-            output_format="mp3_44100_128",
         )
 
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         with open(output_path, "wb") as f:
-            for chunk in audio_generator:
+            for chunk in response:
                 if chunk:
                     f.write(chunk)
-
-        # Clean up the cloned voice to avoid cluttering ElevenLabs account
-        try:
-            client.voices.delete(voice_id)
-        except Exception:
-            pass
 
         return output_path, True
 

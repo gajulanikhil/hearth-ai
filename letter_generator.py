@@ -1,72 +1,98 @@
 """
-letter_generator.py — Generates a clean PDF letter using fpdf2.
-
-Renders the Claude-generated letter text in a warm, readable typographic layout.
-Font: Helvetica (built-in, no font files needed).
+letter_generator.py — Beautiful parchment-style PDF letter using fpdf2.
 """
 
 from pathlib import Path
 from fpdf import FPDF
 
 
-# Mapping of common Unicode characters to Latin-1-safe equivalents.
-# fpdf2's built-in Helvetica/Times/Courier fonts only cover Latin-1 (cp1252).
 _UNICODE_MAP = str.maketrans({
-    "\u2014": "--",   # em dash
-    "\u2013": "-",    # en dash
-    "\u2018": "'",    # left single quote
-    "\u2019": "'",    # right single quote / apostrophe
-    "\u201c": '"',    # left double quote
-    "\u201d": '"',    # right double quote
-    "\u2026": "...",  # ellipsis
-    "\u2022": "-",    # bullet
-    "\u00a0": " ",    # non-breaking space
+    "—": "--",
+    "–": "-",
+    "‘": "'",
+    "’": "'",
+    "“": '"',
+    "”": '"',
+    "…": "...",
+    "•": "-",
+    " ": " ",
 })
 
 
 def _safe(text: str) -> str:
-    """Replace Unicode characters that Latin-1 cannot encode."""
     return text.translate(_UNICODE_MAP).encode("latin-1", errors="replace").decode("latin-1")
 
 
+def _draw_page_decoration(pdf: FPDF):
+    """Warm parchment background + elegant double border + corner diamonds."""
+    # Parchment background
+    pdf.set_fill_color(252, 245, 228)
+    pdf.rect(0, 0, 210, 297, "F")
+
+    # Outer border — warm amber
+    pdf.set_draw_color(180, 130, 60)
+    pdf.set_line_width(1.8)
+    pdf.rect(10, 10, 190, 277)
+
+    # Inner border — lighter gold
+    pdf.set_draw_color(210, 170, 100)
+    pdf.set_line_width(0.5)
+    pdf.rect(13, 13, 184, 271)
+
+    # Corner diamonds (small filled squares rotated via two triangles)
+    pdf.set_fill_color(180, 130, 60)
+    for cx, cy in [(10, 10), (200, 10), (10, 287), (200, 287)]:
+        pdf.set_fill_color(180, 130, 60)
+        pdf.ellipse(cx - 2.2, cy - 2.2, 4.4, 4.4, "F")
+
+
 def generate_letter_pdf(letter_text: str, profile: dict, output_path: Path) -> Path:
-    """
-    Render the letter as a PDF and save to output_path.
-    Returns the path to the created PDF.
-    """
-    patient_name = profile["name"]
-    family_contact = profile["primary_family_contact"]
+    patient_name  = profile.get("name", "")
+    family_contact = profile.get("primary_family_contact", "")
+
+    # Strip parenthetical relationship info if present, e.g. "David Chen (son)"
+    family_display = family_contact.split("(")[0].strip() if family_contact else family_contact
+
+    patient_first = patient_name.split()[0] if patient_name else patient_name
 
     pdf = FPDF()
-    pdf.set_margins(left=25, top=25, right=25)
+    pdf.set_margins(left=28, top=20, right=28)
     pdf.add_page()
 
-    # ── Header: subtle "Hearth" branding ────────────────────────────────────
-    pdf.set_font("Helvetica", style="I", size=9)
-    pdf.set_text_color(180, 160, 140)
-    pdf.cell(0, 8, _safe("Hearth -- a memory companion"), ln=True, align="R")
+    _draw_page_decoration(pdf)
+
+    pdf.set_y(22)
+
+    # ── Decorative top ornament ──────────────────────────────────────────────
+    pdf.set_font("Times", style="I", size=13)
+    pdf.set_text_color(180, 130, 60)
+    pdf.cell(0, 8, _safe("~ ~ ~"), ln=True, align="C")
     pdf.ln(2)
 
-    # ── Thin decorative rule ─────────────────────────────────────────────────
-    pdf.set_draw_color(200, 180, 160)
-    pdf.set_line_width(0.4)
-    pdf.line(25, pdf.get_y(), 185, pdf.get_y())
-    pdf.ln(10)
+    # ── Title: A letter to {patient_first} ──────────────────────────────────
+    pdf.set_font("Times", style="B", size=24)
+    pdf.set_text_color(110, 70, 20)
+    pdf.cell(0, 12, _safe(f"A Letter to {patient_first}"), ln=True, align="C")
 
-    # ── "A letter for" label ─────────────────────────────────────────────────
-    pdf.set_font("Helvetica", style="", size=10)
-    pdf.set_text_color(140, 120, 100)
-    pdf.cell(0, 7, _safe(f"A letter for {patient_name}"), ln=True, align="C")
-    pdf.ln(2)
-    pdf.set_font("Helvetica", style="I", size=9)
-    pdf.cell(0, 6, _safe(f"From {family_contact}"), ln=True, align="C")
-    pdf.ln(14)
+    # ── Subtitle: from {family_member} ──────────────────────────────────────
+    pdf.set_font("Times", style="I", size=13)
+    pdf.set_text_color(155, 110, 55)
+    pdf.cell(0, 8, _safe(f"from {family_display}"), ln=True, align="C")
+    pdf.ln(4)
+
+    # ── Divider rule ─────────────────────────────────────────────────────────
+    pdf.set_draw_color(200, 155, 80)
+    pdf.set_line_width(0.6)
+    pdf.line(38, pdf.get_y(), 172, pdf.get_y())
+    pdf.ln(1)
+    pdf.set_line_width(0.2)
+    pdf.line(44, pdf.get_y(), 166, pdf.get_y())
+    pdf.ln(12)
 
     # ── Letter body ──────────────────────────────────────────────────────────
-    pdf.set_font("Helvetica", size=13)
-    pdf.set_text_color(40, 30, 20)
+    pdf.set_font("Times", size=13)
+    pdf.set_text_color(45, 30, 15)
 
-    # Split into paragraphs to preserve intentional line breaks
     paragraphs = letter_text.strip().split("\n\n")
     for i, para in enumerate(paragraphs):
         para_text = _safe(para.replace("\n", " ").strip())
@@ -75,16 +101,18 @@ def generate_letter_pdf(letter_text: str, profile: dict, output_path: Path) -> P
             if i < len(paragraphs) - 1:
                 pdf.ln(5)
 
-    # ── Bottom rule ──────────────────────────────────────────────────────────
-    pdf.ln(12)
-    pdf.set_draw_color(200, 180, 160)
-    pdf.line(25, pdf.get_y(), 185, pdf.get_y())
-    pdf.ln(6)
-
-    # ── Footer ───────────────────────────────────────────────────────────────
-    pdf.set_font("Helvetica", style="I", size=8)
-    pdf.set_text_color(180, 160, 140)
-    pdf.cell(0, 5, "Generated with love by Hearth.", ln=True, align="C")
+    # ── Closing ornament ─────────────────────────────────────────────────────
+    pdf.ln(10)
+    pdf.set_draw_color(200, 155, 80)
+    pdf.set_line_width(0.2)
+    pdf.line(44, pdf.get_y(), 166, pdf.get_y())
+    pdf.ln(1)
+    pdf.set_line_width(0.6)
+    pdf.line(38, pdf.get_y(), 172, pdf.get_y())
+    pdf.ln(5)
+    pdf.set_font("Times", style="I", size=13)
+    pdf.set_text_color(180, 130, 60)
+    pdf.cell(0, 8, _safe("~ ~ ~"), ln=True, align="C")
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)

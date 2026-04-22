@@ -50,7 +50,11 @@
       "Bash(echo \"Started PID $!\")",
       "Bash(taskkill //PID 12472 //F)",
       "Bash(taskkill //PID 32636 //F)",
-      "Bash(taskkill //PID 7160 //F)"
+      "Bash(taskkill //PID 7160 //F)",
+      "Bash(pkill -f \"uvicorn app:app\")",
+      "Bash(taskkill //F //PID 13272)",
+      "Bash(pip show *)",
+      "Bash(taskkill //F //PID 29492)"
     ]
   }
 }

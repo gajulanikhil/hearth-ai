@@ -455,6 +455,40 @@ async def stream_job(job_id: str):
     )
 
 
+# ── ElevenLabs TTS ───────────────────────────────────────────────────────────
+
+class TTSRequest(BaseModel):
+    text: str
+
+ELEVENLABS_VOICE_ID = "pFZP5JQG7iQjIQuC4Bku"
+
+@app.post("/api/tts")
+async def tts(req: TTSRequest):
+    api_key = os.getenv("ELEVENLABS_API_KEY", "").strip()
+    if not api_key:
+        raise HTTPException(503, "ELEVENLABS_API_KEY not configured.")
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.post(
+                f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}",
+                headers={"xi-api-key": api_key, "Content-Type": "application/json"},
+                json={"text": req.text, "model_id": "eleven_multilingual_v2"},
+            )
+            if r.status_code != 200:
+                raise HTTPException(r.status_code, r.text)
+            audio = r.content
+        return StreamingResponse(
+            iter([audio]),
+            media_type="audio/mpeg",
+            headers={"Content-Length": str(len(audio))},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
 # ── Caretaker Chat ───────────────────────────────────────────────────────────
 
 class ChatRequest(BaseModel):
