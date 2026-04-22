@@ -39,7 +39,10 @@
       "Bash(curl *)",
       "Bash(python -c \" import sys data = sys.stdin.buffer.read\\(\\) print\\('PDF starts with:', data[:4]\\) print\\('File size:', len\\(data\\)\\) \")",
       "Bash(python -c \" from pathlib import Path p = Path\\('F:/JSOM MSBUAN/Spring 2026/BUAN 6V99 AI Agentic/Git/presentation2/hearth-ai/data/outputs/margaret_chen/20260421_171230/photo_story_margaret_chen_20260421_171230.pdf'\\) data = p.read_bytes\\(\\) print\\('PDF starts with:', data[:4]\\) print\\('File size:', len\\(data\\)\\) \")",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(pkill -f \"python app.py\")",
+      "Bash(pkill -f uvicorn)",
+      "Bash(echo \"Server starting with PID $!\")"
     ]
   }
 }

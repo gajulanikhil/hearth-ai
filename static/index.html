@@ -1236,6 +1236,171 @@ audio {
 .text-gold   { color: var(--gold); }
 .italic      { font-style: italic; }
 .serif       { font-family: var(--font-display); }
+
+/* ═══════════════════════════════════════════════════════════
+   CHAT SCREEN
+═══════════════════════════════════════════════════════════ */
+#screen-chat {
+  flex-direction: column;
+}
+.chat-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 24px 0;
+  gap: 0;
+}
+.chat-context-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 18px;
+  margin-bottom: 24px;
+  font-size: 0.85rem;
+  color: var(--cream-dim);
+}
+.chat-context-bar select {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: var(--cream);
+  cursor: pointer;
+  flex: 1;
+  max-width: 260px;
+}
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 16px;
+  min-height: 0;
+}
+.chat-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 80%;
+  animation: msg-appear 0.25s var(--ease);
+}
+@keyframes msg-appear {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.chat-msg.user { align-self: flex-end; align-items: flex-end; }
+.chat-msg.assistant { align-self: flex-start; align-items: flex-start; }
+.chat-bubble {
+  padding: 14px 18px;
+  border-radius: 16px;
+  font-size: 0.93rem;
+  line-height: 1.65;
+}
+.chat-msg.user .chat-bubble {
+  background: var(--amber);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.chat-msg.assistant .chat-bubble {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--cream);
+  border-bottom-left-radius: 4px;
+  white-space: pre-wrap;
+}
+.chat-msg.assistant .chat-bubble.streaming::after {
+  content: '▍';
+  animation: blink 0.8s step-end infinite;
+  margin-left: 2px;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.chat-msg-time {
+  font-size: 0.72rem;
+  color: var(--muted);
+  padding: 0 4px;
+}
+.chat-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+  text-align: center;
+  padding: 60px 24px;
+}
+.chat-empty-icon { font-size: 2.5rem; opacity: 0.5; }
+.chat-empty-text { font-family: var(--font-display); font-style: italic; font-size: 1.15rem; }
+.chat-empty-hint { font-size: 0.82rem; opacity: 0.7; line-height: 1.5; max-width: 340px; }
+.chat-input-row {
+  display: flex;
+  gap: 10px;
+  padding: 16px 0 28px;
+  align-items: flex-end;
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-deep);
+}
+.chat-input-wrap {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: flex-end;
+  padding: 10px 14px;
+  transition: border-color 0.2s;
+}
+.chat-input-wrap:focus-within { border-color: var(--border-hot); }
+#chat-textarea {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 0.93rem;
+  color: var(--cream);
+  line-height: 1.5;
+  min-height: 22px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+#chat-textarea::placeholder { color: var(--muted); }
+.chat-send-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--amber);
+  color: #fff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.chat-send-btn:hover { background: var(--gold); transform: translateY(-1px); }
+.chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.chat-clear-btn {
+  font-size: 0.78rem;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.chat-clear-btn:hover { color: var(--cream); border-color: var(--border-hot); }
 </style>
 </head>
 
@@ -1316,7 +1481,10 @@ audio {
         </svg>
         <span class="nav-logo-text">Hearth</span>
       </div>
-      <span class="nav-mode-badge" id="patients-mode-badge">Loading...</span>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn-secondary" onclick="openChat(null)" style="font-size:0.8rem;padding:8px 16px">💬 Chat with Hearth</button>
+        <span class="nav-mode-badge" id="patients-mode-badge">Loading...</span>
+      </div>
     </nav>
     <div class="patients-body">
       <div class="section-header">
@@ -1343,6 +1511,7 @@ audio {
         <span class="nav-logo-text">Hearth</span>
       </div>
       <div style="display:flex;gap:10px;align-items:center">
+        <button class="btn-secondary" onclick="openChat(state.currentPatientId)" style="font-size:0.8rem;padding:8px 16px">💬 Chat</button>
         <button class="btn-secondary" onclick="showOnboarding(state.currentPatientId)" style="font-size:0.8rem;padding:8px 16px">+ Add Memories</button>
         <button class="btn-danger" onclick="deletePatientFromDetail()">Delete Patient</button>
       </div>
@@ -1599,6 +1768,46 @@ audio {
       </div>
 
     </div><!-- /onboarding-body -->
+  </section>
+
+  <!-- ─── SCREEN: CARETAKER CHAT ───────────────────────────── -->
+  <section id="screen-chat" class="screen">
+    <nav class="nav">
+      <div class="nav-back" onclick="goBack()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        Back
+      </div>
+      <div class="nav-logo" onclick="navigateTo('landing')">
+        <svg width="22" height="26" viewBox="0 0 100 120" fill="none"><path d="M50 110 C20 85 8 60 15 35 C22 10 40 5 50 20 C60 5 78 10 85 35 C92 60 80 85 50 110Z" fill="#b87430"/></svg>
+        <span class="nav-logo-text">Hearth</span>
+      </div>
+      <button class="chat-clear-btn" onclick="clearChat()">Clear chat</button>
+    </nav>
+    <div class="chat-body">
+      <div class="chat-context-bar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        <span>Patient context:</span>
+        <select id="chat-patient-select" onchange="chatSetPatient(this.value)">
+          <option value="">No patient selected (general advice)</option>
+        </select>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-empty" id="chat-empty">
+          <div class="chat-empty-icon">💬</div>
+          <div class="chat-empty-text">Ask Hearth anything</div>
+          <div class="chat-empty-hint">Get personalized guidance on care techniques, conversation starters, or how to handle difficult moments — select a patient above for context-aware advice.</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <div class="chat-input-wrap">
+          <textarea id="chat-textarea" placeholder="Type your question…" rows="1"
+            onkeydown="chatKeyDown(event)" oninput="chatAutoResize(this)"></textarea>
+        </div>
+        <button class="chat-send-btn" id="chat-send-btn" onclick="chatSend()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
   </section>
 
 </div><!-- /app -->
@@ -2474,6 +2683,145 @@ async function obUploadVoice() {
     else handleVoiceSelect(files);
   });
 });
+
+/* ═══════════════════════════════════════════════════════════
+   CARETAKER CHAT
+═══════════════════════════════════════════════════════════ */
+const chatState = {
+  patientId: null,
+  history: [],   // [{role, content}]
+  streaming: false,
+};
+
+async function openChat(patientId) {
+  chatState.patientId = patientId || null;
+  // Populate patient select
+  const sel = document.getElementById('chat-patient-select');
+  sel.innerHTML = '<option value="">No patient selected (general advice)</option>';
+  try {
+    const patients = await api('/patients');
+    patients.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.profile?.name || p.id;
+      if (p.id === patientId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  } catch (_) {}
+  navigateTo('chat');
+}
+
+function chatSetPatient(val) {
+  chatState.patientId = val || null;
+}
+
+function chatAutoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
+function chatKeyDown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    chatSend();
+  }
+}
+
+function _chatTime() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function _appendMsg(role, content, streaming) {
+  const container = document.getElementById('chat-messages');
+  document.getElementById('chat-empty')?.remove();
+
+  const wrapper = document.createElement('div');
+  wrapper.className = `chat-msg ${role}`;
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble' + (streaming ? ' streaming' : '');
+  bubble.textContent = content;
+  const time = document.createElement('div');
+  time.className = 'chat-msg-time';
+  time.textContent = _chatTime();
+  wrapper.appendChild(bubble);
+  wrapper.appendChild(time);
+  container.appendChild(wrapper);
+  container.scrollTop = container.scrollHeight;
+  return bubble;
+}
+
+async function chatSend() {
+  if (chatState.streaming) return;
+  const textarea = document.getElementById('chat-textarea');
+  const text = textarea.value.trim();
+  if (!text) return;
+
+  textarea.value = '';
+  textarea.style.height = 'auto';
+  document.getElementById('chat-send-btn').disabled = true;
+  chatState.streaming = true;
+
+  _appendMsg('user', text);
+  chatState.history.push({ role: 'user', content: text });
+
+  const assistantBubble = _appendMsg('assistant', '', true);
+
+  let accumulated = '';
+  try {
+    const resp = await fetch('/api/chat/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        patient_id: chatState.patientId || null,
+        history: chatState.history.slice(0, -1),
+      }),
+    });
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const ev = JSON.parse(line.slice(6));
+          if (ev.error) { accumulated += '\n[Error: ' + ev.error + ']'; }
+          else if (ev.token) { accumulated += ev.token; }
+        } catch (_) {}
+        assistantBubble.textContent = accumulated;
+        document.getElementById('chat-messages').scrollTop = 999999;
+      }
+    }
+  } catch (e) {
+    accumulated = '[Connection error: ' + e.message + ']';
+  }
+
+  assistantBubble.classList.remove('streaming');
+  assistantBubble.textContent = accumulated || '(no response)';
+  chatState.history.push({ role: 'assistant', content: accumulated });
+
+  chatState.streaming = false;
+  document.getElementById('chat-send-btn').disabled = false;
+  document.getElementById('chat-textarea').focus();
+}
+
+function clearChat() {
+  chatState.history = [];
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = `
+    <div class="chat-empty" id="chat-empty">
+      <div class="chat-empty-icon">💬</div>
+      <div class="chat-empty-text">Ask Hearth anything</div>
+      <div class="chat-empty-hint">Get personalized guidance on care techniques, conversation starters, or how to handle difficult moments — select a patient above for context-aware advice.</div>
+    </div>`;
+}
 
 /* ═══════════════════════════════════════════════════════════
    INIT

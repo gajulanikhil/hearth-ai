@@ -338,7 +338,25 @@ def _run_lucid_now(patient_id: str, job_id: str):
         try:
             if photo_info:
                 if use_demo:
-                    from demo_run import PHOTO_CAPTIONS as captions
+                    if patient_id == "margaret_chen":
+                        from demo_run import PHOTO_CAPTIONS as captions
+                    else:
+                        first = profile.get("name", "them").split()[0]
+                        anchors = profile.get("emotional_anchors", [])
+                        captions = []
+                        for item in photo_info:
+                            if item.get("missing_file"):
+                                continue
+                            ctx = item.get("context", "")
+                            if ctx and ctx not in ("family photo", ""):
+                                caption = ctx
+                            elif anchors:
+                                caption = f"A cherished memory for {first} — {anchors[0]}."
+                            else:
+                                caption = f"A treasured family photo for {first}."
+                            captions.append({"filename": item["filename"], "caption": caption})
+                        if not captions:
+                            from demo_run import PHOTO_CAPTIONS as captions
                 else:
                     captions = agent.generate_photo_captions(profile, memories, photo_info)
 
@@ -433,6 +451,72 @@ async def stream_job(job_id: str):
 
     return StreamingResponse(
         event_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+# ── Caretaker Chat ───────────────────────────────────────────────────────────
+
+class ChatRequest(BaseModel):
+    message: str
+    patient_id: Optional[str] = None
+    history: list = []
+
+
+@app.post("/api/chat/stream")
+async def chat_stream(req: ChatRequest):
+    """Stream a Claude response to the caretaker. Optionally scoped to a patient."""
+
+    async def generate():
+        try:
+            import anthropic
+            client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY") or None)
+
+            system_parts = [
+                "You are Hearth, a compassionate AI assistant for caregivers supporting patients with Alzheimer's or dementia. "
+                "Provide warm, practical, evidence-based guidance. Keep responses clear and concise."
+            ]
+
+            if req.patient_id and memory_bank.patient_exists(req.patient_id):
+                profile = memory_bank.load_profile(req.patient_id)
+                memories = memory_bank.load_memories(req.patient_id)
+                name = profile.get("name", req.patient_id)
+                stage = profile.get("stage", "unknown")
+                anchors = ", ".join(profile.get("emotional_anchors", []))
+                calming = ", ".join(profile.get("calming_topics", []))
+                avoid = ", ".join(profile.get("avoid_topics", []))
+                system_parts.append(
+                    f"\n\nYou are currently assisting with care for {name} (age {profile.get('age', '?')}, stage: {stage}). "
+                    f"Emotional anchors: {anchors}. Calming topics: {calming}. Avoid: {avoid}. "
+                    f"They have {len(memories)} family memories on record."
+                )
+
+            system_prompt = "".join(system_parts)
+
+            messages = []
+            for h in req.history[-20:]:
+                if h.get("role") in ("user", "assistant") and h.get("content"):
+                    messages.append({"role": h["role"], "content": h["content"]})
+            messages.append({"role": "user", "content": req.message})
+
+            with client.messages.stream(
+                model="claude-sonnet-4-6",
+                max_tokens=1024,
+                system=system_prompt,
+                messages=messages,
+            ) as stream:
+                for text in stream.text_stream:
+                    payload = json.dumps({"token": text})
+                    yield f"data: {payload}\n\n"
+
+            yield "data: {\"done\": true}\n\n"
+
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    return StreamingResponse(
+        generate(),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
